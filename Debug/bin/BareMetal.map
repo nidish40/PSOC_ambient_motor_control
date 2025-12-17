@@ -207,7 +207,7 @@ END GROUP
  .text          0x000000c0      0x18c Application_Source/main.o
                 0x000000c0                main
                 0x000001b4                ioss_interrupts_gpio_3_IRQHandler
-                0x00000204                TIMER_2_IRQHandler
+                0x00000204                tcpwm_interrupts_2_IRQHandler
  .text          0x0000024c      0x2d0 Application_Source/drivers/gpio/gpio.o
                 0x0000024c                hsiom_set
                 0x000002d8                gpio_init
@@ -232,27 +232,26 @@ END GROUP
                 0x00000730                NMI_Handler
                 0x00000730                ioss_interrupts_gpio_1_IRQHandler
                 0x00000730                cpuss_interrupt_dma_IRQHandler
-                0x00000730                scb_4_interrupt_IRQHandler
-                0x00000730                ioss_interrupts_gpio_2_IRQHandler
                 0x00000730                can_interrupt_can_IRQHandler
+                0x00000730                ioss_interrupts_gpio_2_IRQHandler
+                0x00000730                scb_2_interrupt_IRQHandler
                 0x00000730                tcpwm_interrupts_4_IRQHandler
                 0x00000730                cpuss_interrupt_spcif_IRQHandler
                 0x00000730                scb_0_interrupt_IRQHandler
                 0x00000730                tcpwm_interrupts_3_IRQHandler
                 0x00000730                csd_interrupt_IRQHandler
                 0x00000730                tcpwm_interrupts_1_IRQHandler
-                0x00000730                lpcomp_interrupt_IRQHandler
+                0x00000730                scb_4_interrupt_IRQHandler
                 0x00000730                crypto_interrupt_IRQHandler
                 0x00000730                tcpwm_interrupts_6_IRQHandler
                 0x00000730                ioss_interrupt_gpio_IRQHandler
-                0x00000730                scb_2_interrupt_IRQHandler
+                0x00000730                lpcomp_interrupt_IRQHandler
                 0x00000730                scb_1_interrupt_IRQHandler
                 0x00000730                Default_Handler
                 0x00000730                scb_3_interrupt_IRQHandler
                 0x00000730                ioss_interrupts_gpio_0_IRQHandler
                 0x00000730                tcpwm_interrupts_0_IRQHandler
                 0x00000730                SVC_Handler
-                0x00000730                tcpwm_interrupts_2_IRQHandler
                 0x00000730                tcpwm_interrupts_5_IRQHandler
                 0x00000730                srss_interrupt_wdt_IRQHandler
                 0x00000730                pass_0_interrupt_ctbs_IRQHandler
@@ -358,13 +357,13 @@ LOAD linker stubs
  .debug_line    0x000005e4      0x1ca ./Special_Libraries/cmsis_gcc.o
  .debug_line    0x000007ae      0x190 ./Startup/startup.o
 
-.debug_str      0x00000000      0x476
- .debug_str     0x00000000      0x476 Application_Source/main.o
-                                0x2da (size before relaxing)
- .debug_str     0x00000476      0x269 Application_Source/drivers/gpio/gpio.o
- .debug_str     0x00000476      0x1b0 Application_Source/drivers/clock/clock.o
- .debug_str     0x00000476      0x217 ./Special_Libraries/cmsis_gcc.o
- .debug_str     0x00000476      0x1da ./Startup/startup.o
+.debug_str      0x00000000      0x4ac
+ .debug_str     0x00000000      0x4ac Application_Source/main.o
+                                0x2e5 (size before relaxing)
+ .debug_str     0x000004ac      0x269 Application_Source/drivers/gpio/gpio.o
+ .debug_str     0x000004ac      0x1b0 Application_Source/drivers/clock/clock.o
+ .debug_str     0x000004ac      0x217 ./Special_Libraries/cmsis_gcc.o
+ .debug_str     0x000004ac      0x1da ./Startup/startup.o
 
 .comment        0x00000000       0x44
  .comment       0x00000000       0x44 Application_Source/main.o

@@ -19,7 +19,7 @@ int main(void)
 
     /*timer init*/
     //*((uint32_t *)0xE000E410) = (1 << 30); //Timer 2 IRQn=19 Priority  1 set
-    NVIC_EnableIRQ(19); //enable Timer 2 IRQn=20
+    NVIC_EnableIRQ(19); //enable Timer 2 IRQn=19
     NVIC_SetPriority(19, 0); //set Timer 2 IRQn=19 Priority 
     NVIC_ClearPendingIRQ(19); //clear any pending interrupt for Timer 2 in NVIC
 	
@@ -84,13 +84,13 @@ void ioss_interrupts_gpio_3_IRQHandler(void)
     }
 }
 
-void TIMER_2_IRQHandler(void)
+void tcpwm_interrupts_2_IRQHandler(void)
 {
     //check if timer expired
     if (*((uint32_t *)0x402001B0) & (1 << 0)) //check TC bit in TCPWM2 TCPWM_CNT2_INTR Register
     {
         //clear interrupt
-        *((uint32_t *)0x402001B0) |= (1 << 0); //clear TC bit in TCPWM2 TCPWM_CNT2_INTR Register
+        *((uint32_t *)0x402001B0) = (1 << 0); //clear TC bit in TCPWM2 TCPWM_CNT2_INTR Register
         timer_flag ^= 1; //toggle timer flag
         gpio_write(2,2, timer_flag); //set p2.2 high
 

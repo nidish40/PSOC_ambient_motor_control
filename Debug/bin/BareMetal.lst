@@ -21,13 +21,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
   8 .debug_line   0000093e  00000000  00000000  0000274b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
-  9 .debug_str    00000476  00000000  00000000  00003089  2**0
+  9 .debug_str    000004ac  00000000  00000000  00003089  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 10 .comment      00000044  00000000  00000000  000034ff  2**0
+ 10 .comment      00000044  00000000  00000000  00003535  2**0
                   CONTENTS, READONLY
- 11 .ARM.attributes 0000002c  00000000  00000000  00003543  2**0
+ 11 .ARM.attributes 0000002c  00000000  00000000  00003579  2**0
                   CONTENTS, READONLY
- 12 .debug_frame  0000029c  00000000  00000000  00003570  2**2
+ 12 .debug_frame  0000029c  00000000  00000000  000035a8  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -41,7 +41,7 @@ Disassembly of section .text:
   5c:	31 07 00 00 31 07 00 00 31 07 00 00 31 07 00 00     1...1...1...1...
   6c:	31 07 00 00 31 07 00 00 31 07 00 00 31 07 00 00     1...1...1...1...
   7c:	31 07 00 00 31 07 00 00 31 07 00 00 31 07 00 00     1...1...1...1...
-  8c:	31 07 00 00 31 07 00 00 31 07 00 00 31 07 00 00     1...1...1...1...
+  8c:	05 02 00 00 31 07 00 00 31 07 00 00 31 07 00 00     ....1...1...1...
   9c:	31 07 00 00 31 07 00 00 31 07 00 00 31 07 00 00     1...1...1...1...
   ac:	31 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00     1...............
   bc:	00 00 00 00                                         ....
@@ -260,39 +260,39 @@ void ioss_interrupts_gpio_3_IRQHandler(void)
  1fc:	40040300 	.word	0x40040300
  200:	20000000 	.word	0x20000000
 
-00000204 <TIMER_2_IRQHandler>:
+00000204 <tcpwm_interrupts_2_IRQHandler>:
 
-void TIMER_2_IRQHandler(void)
+void tcpwm_interrupts_2_IRQHandler(void)
 {
  204:	b580      	push	{r7, lr}
  206:	af00      	add	r7, sp, #0
     //check if timer expired
     if (*((uint32_t *)0x402001B0) & (1 << 0)) //check TC bit in TCPWM2 TCPWM_CNT2_INTR Register
- 208:	4b0e      	ldr	r3, [pc, #56]	@ (244 <TIMER_2_IRQHandler+0x40>)
+ 208:	4b0e      	ldr	r3, [pc, #56]	@ (244 <tcpwm_interrupts_2_IRQHandler+0x40>)
  20a:	681b      	ldr	r3, [r3, #0]
  20c:	2201      	movs	r2, #1
  20e:	4013      	ands	r3, r2
- 210:	d015      	beq.n	23e <TIMER_2_IRQHandler+0x3a>
+ 210:	d015      	beq.n	23e <tcpwm_interrupts_2_IRQHandler+0x3a>
     {
         //clear interrupt
         *((uint32_t *)0x402001B0) |= (1 << 0); //clear TC bit in TCPWM2 TCPWM_CNT2_INTR Register
- 212:	4b0c      	ldr	r3, [pc, #48]	@ (244 <TIMER_2_IRQHandler+0x40>)
+ 212:	4b0c      	ldr	r3, [pc, #48]	@ (244 <tcpwm_interrupts_2_IRQHandler+0x40>)
  214:	681a      	ldr	r2, [r3, #0]
- 216:	4b0b      	ldr	r3, [pc, #44]	@ (244 <TIMER_2_IRQHandler+0x40>)
+ 216:	4b0b      	ldr	r3, [pc, #44]	@ (244 <tcpwm_interrupts_2_IRQHandler+0x40>)
  218:	2101      	movs	r1, #1
  21a:	430a      	orrs	r2, r1
  21c:	601a      	str	r2, [r3, #0]
         timer_flag ^= 1; //toggle timer flag
- 21e:	4b0a      	ldr	r3, [pc, #40]	@ (248 <TIMER_2_IRQHandler+0x44>)
+ 21e:	4b0a      	ldr	r3, [pc, #40]	@ (248 <tcpwm_interrupts_2_IRQHandler+0x44>)
  220:	781b      	ldrb	r3, [r3, #0]
  222:	b2db      	uxtb	r3, r3
  224:	2201      	movs	r2, #1
  226:	4053      	eors	r3, r2
  228:	b2da      	uxtb	r2, r3
- 22a:	4b07      	ldr	r3, [pc, #28]	@ (248 <TIMER_2_IRQHandler+0x44>)
+ 22a:	4b07      	ldr	r3, [pc, #28]	@ (248 <tcpwm_interrupts_2_IRQHandler+0x44>)
  22c:	701a      	strb	r2, [r3, #0]
         gpio_write(2,2, timer_flag); //set p2.2 high
- 22e:	4b06      	ldr	r3, [pc, #24]	@ (248 <TIMER_2_IRQHandler+0x44>)
+ 22e:	4b06      	ldr	r3, [pc, #24]	@ (248 <tcpwm_interrupts_2_IRQHandler+0x44>)
  230:	781b      	ldrb	r3, [r3, #0]
  232:	b2db      	uxtb	r3, r3
  234:	001a      	movs	r2, r3
