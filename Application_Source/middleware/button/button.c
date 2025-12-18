@@ -1,16 +1,16 @@
 #include "button.h"
 #include "drivers/gpio/gpio.h"
 
-/* ================= CONFIG ================= */
+//CONFIG  
 
 #define BUTTON_PORT   3
 #define BUTTON_PIN    7
 
-/* ================= STATE ================= */
+// STATE 
 
 static volatile uint8_t button_pressed_flag = 0;
 
-/* ================= API ================= */
+//API 
 
 void button_init(void)
 {

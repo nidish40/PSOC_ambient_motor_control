@@ -4,6 +4,8 @@
 #include "drivers/gpio/gpio.h"
 #include "drivers/clock/clock.h"
 #include "drivers/uart/uart.h"
+#include "drivers/timers/timer.h"
+#include "drivers/timers/psoc4100s_tcpwm_regs.h"
 #include "./../Special_Libraries/cmsis_gcc.h"
 
 
@@ -24,18 +26,16 @@ int main(void)
 
     enable_irq(); //enable global interrupts
 
+
     while (1)
     {
     
-        //uart_init();
-        //uart_write_string("UART OK\r\n");
-
-
         static uint32_t ldr_div = 0;
 
         ldr_div++;
-        if (ldr_div >= 1000)   // adjust experimentally
+        if (ldr_div >= 500)   //wait interval before reading
         {
+            
             ldr_div = 0;
 
             uint8_t light = ldr_get_light_percent();
@@ -43,8 +43,8 @@ int main(void)
         }
 
         motor_update();
-
     }
+    return 0;
 
 }
 
@@ -56,6 +56,7 @@ void ioss_interrupts_gpio_3_IRQHandler(void)
 
     if (gpio_read(3,7) == 0) //active low
     {
+
         motor_toggle_direction();
     }
 }

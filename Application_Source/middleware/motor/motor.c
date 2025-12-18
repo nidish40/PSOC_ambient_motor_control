@@ -3,7 +3,7 @@
 #include "drivers/gpio/gpio.h"
 #include "drivers/timers/psoc4100s_tcpwm_regs.h"
 
-/* ================= USER CONFIG ================= */
+///User config
 
 #define MOTOR_PWM_CNT        7       // TCPWM counter number
 #define MOTOR_PWM_PERIOD     1000
@@ -21,7 +21,7 @@
 #define MOTOR_MAX_SPEED      90      // %
 #define MOTOR_RAMP_STEP      2       // % per update
 
-/* ================= INTERNAL STATE ================= */
+//Internal State
 
 static uint8_t current_speed = 0;
 static uint8_t target_speed  = 0;
@@ -29,14 +29,14 @@ static uint8_t IN1_out = 1;
 static uint8_t IN2_out = 0; 
 static motor_dir_t direction = MOTOR_DIR_FORWARD;
 
-/* ================= HELPERS ================= */
+//Helpers
 
 static uint32_t percent_to_compare(uint8_t percent)
 {
     return (percent * MOTOR_PWM_PERIOD) / 100;
 }
 
-/* ================= API ================= */
+//API
 
 void motor_init(void)
 {
