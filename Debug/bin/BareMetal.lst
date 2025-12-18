@@ -1,0 +1,1580 @@
+
+bin/BareMetal.elf:     file format elf32-littlearm
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00000a5c  00000000  00000000  00001000  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .data         00000000  20000000  20000000  00001a5c  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .bss          00000004  20000000  00000a5c  00002000  2**1
+                  ALLOC
+  3 Heap          00002dfc  20000004  00000a5c  00002004  2**0
+                  ALLOC
+  4 Stack         00000200  20002e00  00000a5c  00001e00  2**0
+                  ALLOC
+  5 .debug_info   00000cae  00000000  00000000  00001a5c  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+  6 .debug_abbrev 00000590  00000000  00000000  0000270a  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+  7 .debug_aranges 000000c0  00000000  00000000  00002c9a  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+  8 .debug_line   00000b85  00000000  00000000  00002d5a  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+  9 .debug_str    0000051e  00000000  00000000  000038df  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 10 .comment      00000044  00000000  00000000  00003dfd  2**0
+                  CONTENTS, READONLY
+ 11 .ARM.attributes 0000002c  00000000  00000000  00003e41  2**0
+                  CONTENTS, READONLY
+ 12 .debug_frame  00000370  00000000  00000000  00003e70  2**2
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+
+Disassembly of section .text:
+
+00000000 <vector>:
+   0:	00 40 00 20 6f 09 00 00 05 0a 00 00 0d 0a 00 00     .@. o...........
+	...
+  2c:	05 0a 00 00 00 00 00 00 00 00 00 00 05 0a 00 00     ................
+  3c:	05 0a 00 00 05 0a 00 00 05 0a 00 00 05 0a 00 00     ................
+  4c:	e9 01 00 00 05 0a 00 00 05 0a 00 00 05 0a 00 00     ................
+  5c:	05 0a 00 00 05 0a 00 00 05 0a 00 00 05 0a 00 00     ................
+  6c:	05 0a 00 00 05 0a 00 00 05 0a 00 00 05 0a 00 00     ................
+  7c:	05 0a 00 00 05 0a 00 00 05 0a 00 00 05 0a 00 00     ................
+  8c:	39 02 00 00 05 0a 00 00 05 0a 00 00 05 0a 00 00     9...............
+  9c:	05 0a 00 00 05 0a 00 00 05 0a 00 00 05 0a 00 00     ................
+  ac:	05 0a 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+  bc:	00 00 00 00                                         ....
+
+000000c0 <main>:
+#define BTN_PIN 7
+
+
+
+int main(void)
+{
+  c0:	b580      	push	{r7, lr}
+  c2:	b082      	sub	sp, #8
+  c4:	af00      	add	r7, sp, #0
+    /*clock init*/
+    clock_div16_init(0, 24, 8); //set clk_peri div16_0 for 24 Mhz divide by 24 and route to tcpwm2 clk (peripheral 8)
+  c6:	2208      	movs	r2, #8
+  c8:	2118      	movs	r1, #24
+  ca:	2000      	movs	r0, #0
+  cc:	f000 fa3e 	bl	54c <clock_div16_init>
+
+    /*timer init*/
+    //*((uint32_t *)0xE000E410) = (1 << 30); //Timer 2 IRQn=19 Priority  1 set
+    NVIC_EnableIRQ(19); //enable Timer 2 IRQn=19
+  d0:	2013      	movs	r0, #19
+  d2:	f000 fc17 	bl	904 <NVIC_EnableIRQ>
+    NVIC_ClearPendingIRQ(19); //clear any pending interrupt for Timer 2 in NVIC
+  d6:	2013      	movs	r0, #19
+  d8:	f000 fbfe 	bl	8d8 <NVIC_ClearPendingIRQ>
+    NVIC_SetPriority(19, 0); //set Timer 2 IRQn=19 Priority 
+  dc:	2100      	movs	r1, #0
+  de:	2013      	movs	r0, #19
+  e0:	f000 fbcc 	bl	87c <NVIC_SetPriority>
+	
+    /*TIMER 2 - INIT*/
+
+    timer_init(2, 50000); //initialize timer 2 with period of 50000 ticks (24MHz/50000 = 480 Hz)
+  e4:	4b39      	ldr	r3, [pc, #228]	@ (1cc <main+0x10c>)
+  e6:	0019      	movs	r1, r3
+  e8:	2002      	movs	r0, #2
+  ea:	f000 fa6f 	bl	5cc <timer_init>
+
+    timer_start(2); //start timer 2
+  ee:	2002      	movs	r0, #2
+  f0:	f000 fada 	bl	6a8 <timer_start>
+
+    /*led init*/
+    gpio_init(2,2, GPIO_OUTPUT_PUSH_PULL); //init p2.2 as output
+  f4:	2206      	movs	r2, #6
+  f6:	2102      	movs	r1, #2
+  f8:	2002      	movs	r0, #2
+  fa:	f000 f905 	bl	308 <gpio_init>
+
+    gpio_init(2,0, GPIO_OUTPUT_PUSH_PULL); //init p2.0 as output
+  fe:	2206      	movs	r2, #6
+ 100:	2100      	movs	r1, #0
+ 102:	2002      	movs	r0, #2
+ 104:	f000 f900 	bl	308 <gpio_init>
+
+    /*pwm led*/
+    gpio_init(1, 6, GPIO_OUTPUT_PUSH_PULL); //init p1.6 as output
+ 108:	2206      	movs	r2, #6
+ 10a:	2106      	movs	r1, #6
+ 10c:	2001      	movs	r0, #1
+ 10e:	f000 f8fb 	bl	308 <gpio_init>
+    gpio_hsiom_set(1,6, 8); //set hsiom to tcpwm7, act_0 of hsiom port 1 is tcpwm7 lineout 
+ 112:	2208      	movs	r2, #8
+ 114:	2106      	movs	r1, #6
+ 116:	2001      	movs	r0, #1
+ 118:	f000 f8b0 	bl	27c <gpio_hsiom_set>
+
+    clock_div16_init(1, 24, 13); //24Mhz/24 = 1MHz clock to tcpwm7 (peripheral 13)
+ 11c:	220d      	movs	r2, #13
+ 11e:	2118      	movs	r1, #24
+ 120:	2001      	movs	r0, #1
+ 122:	f000 fa13 	bl	54c <clock_div16_init>
+    pwm_init(7, 10000, 9000); //initialize pwm on tcpwm7 with period of 10000 ticks (1MHz/10000 = 100 Hz) and 20% duty cycle
+ 126:	4a2a      	ldr	r2, [pc, #168]	@ (1d0 <main+0x110>)
+ 128:	4b2a      	ldr	r3, [pc, #168]	@ (1d4 <main+0x114>)
+ 12a:	0019      	movs	r1, r3
+ 12c:	2007      	movs	r0, #7
+ 12e:	f000 fb17 	bl	760 <pwm_init>
+    pwm_start(7);
+ 132:	2007      	movs	r0, #7
+ 134:	f000 fb70 	bl	818 <pwm_start>
+    
+
+    /*button*/
+    gpio_init(3,7, GPIO_INPUT_PULLUP); //init p3.7 as input with pullup
+ 138:	2202      	movs	r2, #2
+ 13a:	2107      	movs	r1, #7
+ 13c:	2003      	movs	r0, #3
+ 13e:	f000 f8e3 	bl	308 <gpio_init>
+
+    GPIO_PORT(3)->INTR_CFG |= (0x2 << (BTN_PIN * 2)); //set interrupt on falling edge for p3.7
+ 142:	4b25      	ldr	r3, [pc, #148]	@ (1d8 <main+0x118>)
+ 144:	68da      	ldr	r2, [r3, #12]
+ 146:	4b24      	ldr	r3, [pc, #144]	@ (1d8 <main+0x118>)
+ 148:	2180      	movs	r1, #128	@ 0x80
+ 14a:	0209      	lsls	r1, r1, #8
+ 14c:	430a      	orrs	r2, r1
+ 14e:	60da      	str	r2, [r3, #12]
+    GPIO_PORT(3)->INTR |= (1 << BTN_PIN); //clear any pending interrupt for p3.7
+ 150:	4b21      	ldr	r3, [pc, #132]	@ (1d8 <main+0x118>)
+ 152:	691a      	ldr	r2, [r3, #16]
+ 154:	4b20      	ldr	r3, [pc, #128]	@ (1d8 <main+0x118>)
+ 156:	2180      	movs	r1, #128	@ 0x80
+ 158:	430a      	orrs	r2, r1
+ 15a:	611a      	str	r2, [r3, #16]
+
+
+    /*configuring interrupt*/
+    
+    NVIC_SetPriority(3, 1); //set highest priority for button
+ 15c:	2101      	movs	r1, #1
+ 15e:	2003      	movs	r0, #3
+ 160:	f000 fb8c 	bl	87c <NVIC_SetPriority>
+    NVIC_EnableIRQ(3); //enable GPIO P3 interrupt in NVIC
+ 164:	2003      	movs	r0, #3
+ 166:	f000 fbcd 	bl	904 <NVIC_EnableIRQ>
+    
+    
+    NVIC_ClearPendingIRQ(3); //clear any pending interrupt for GPIO P3 in NVIC
+ 16a:	2003      	movs	r0, #3
+ 16c:	f000 fbb4 	bl	8d8 <NVIC_ClearPendingIRQ>
+
+    enable_irq(); //enable global interrupts
+ 170:	f000 fb78 	bl	864 <enable_irq>
+
+    while (1)
+    {   
+        for(volatile uint16_t i=0; i<10000;i=i+1000){   
+ 174:	1dbb      	adds	r3, r7, #6
+ 176:	2200      	movs	r2, #0
+ 178:	801a      	strh	r2, [r3, #0]
+ 17a:	e020      	b.n	1be <main+0xfe>
+            TCPWM_CNT_REG(7, TCPWM_CC_OFFSET) = i-1; //initialize pwm on tcpwm7 with period of 48000 ticks (24MHz/48000 = 500 Hz) and 50% duty cycle
+ 17c:	1dbb      	adds	r3, r7, #6
+ 17e:	881b      	ldrh	r3, [r3, #0]
+ 180:	b29b      	uxth	r3, r3
+ 182:	1e5a      	subs	r2, r3, #1
+ 184:	4b15      	ldr	r3, [pc, #84]	@ (1dc <main+0x11c>)
+ 186:	601a      	str	r2, [r3, #0]
+            for(volatile uint16_t i=0;i<50000;i++);
+ 188:	1d3b      	adds	r3, r7, #4
+ 18a:	2200      	movs	r2, #0
+ 18c:	801a      	strh	r2, [r3, #0]
+ 18e:	e006      	b.n	19e <main+0xde>
+ 190:	1d3b      	adds	r3, r7, #4
+ 192:	881b      	ldrh	r3, [r3, #0]
+ 194:	b29b      	uxth	r3, r3
+ 196:	3301      	adds	r3, #1
+ 198:	b29a      	uxth	r2, r3
+ 19a:	1d3b      	adds	r3, r7, #4
+ 19c:	801a      	strh	r2, [r3, #0]
+ 19e:	1d3b      	adds	r3, r7, #4
+ 1a0:	881b      	ldrh	r3, [r3, #0]
+ 1a2:	b29b      	uxth	r3, r3
+ 1a4:	4a0e      	ldr	r2, [pc, #56]	@ (1e0 <main+0x120>)
+ 1a6:	4293      	cmp	r3, r2
+ 1a8:	d9f2      	bls.n	190 <main+0xd0>
+        for(volatile uint16_t i=0; i<10000;i=i+1000){   
+ 1aa:	1dbb      	adds	r3, r7, #6
+ 1ac:	881b      	ldrh	r3, [r3, #0]
+ 1ae:	b29b      	uxth	r3, r3
+ 1b0:	22fa      	movs	r2, #250	@ 0xfa
+ 1b2:	0092      	lsls	r2, r2, #2
+ 1b4:	4694      	mov	ip, r2
+ 1b6:	4463      	add	r3, ip
+ 1b8:	b29a      	uxth	r2, r3
+ 1ba:	1dbb      	adds	r3, r7, #6
+ 1bc:	801a      	strh	r2, [r3, #0]
+ 1be:	1dbb      	adds	r3, r7, #6
+ 1c0:	881b      	ldrh	r3, [r3, #0]
+ 1c2:	b29b      	uxth	r3, r3
+ 1c4:	4a07      	ldr	r2, [pc, #28]	@ (1e4 <main+0x124>)
+ 1c6:	4293      	cmp	r3, r2
+ 1c8:	d9d8      	bls.n	17c <main+0xbc>
+ 1ca:	e7d3      	b.n	174 <main+0xb4>
+ 1cc:	0000c350 	.word	0x0000c350
+ 1d0:	00002328 	.word	0x00002328
+ 1d4:	00002710 	.word	0x00002710
+ 1d8:	40040300 	.word	0x40040300
+ 1dc:	402002cc 	.word	0x402002cc
+ 1e0:	0000c34f 	.word	0x0000c34f
+ 1e4:	0000270f 	.word	0x0000270f
+
+000001e8 <ioss_interrupts_gpio_3_IRQHandler>:
+        
+    }
+}
+
+void ioss_interrupts_gpio_3_IRQHandler(void)
+{
+ 1e8:	b580      	push	{r7, lr}
+ 1ea:	af00      	add	r7, sp, #0
+    //check if button is pressed
+    GPIO_PORT(3)->INTR |= (1 << BTN_PIN); //clear interrupt
+ 1ec:	4b10      	ldr	r3, [pc, #64]	@ (230 <__HEAP_SIZE+0x30>)
+ 1ee:	691a      	ldr	r2, [r3, #16]
+ 1f0:	4b0f      	ldr	r3, [pc, #60]	@ (230 <__HEAP_SIZE+0x30>)
+ 1f2:	2180      	movs	r1, #128	@ 0x80
+ 1f4:	430a      	orrs	r2, r1
+ 1f6:	611a      	str	r2, [r3, #16]
+    
+    if (gpio_read(3,7) == 0) //active low
+ 1f8:	2107      	movs	r1, #7
+ 1fa:	2003      	movs	r0, #3
+ 1fc:	f000 f988 	bl	510 <gpio_read>
+ 200:	1e03      	subs	r3, r0, #0
+ 202:	d112      	bne.n	22a <__HEAP_SIZE+0x2a>
+    {
+        button_pressed ^= 1; //toggle button pressed state
+ 204:	4b0b      	ldr	r3, [pc, #44]	@ (234 <__HEAP_SIZE+0x34>)
+ 206:	781b      	ldrb	r3, [r3, #0]
+ 208:	b2db      	uxtb	r3, r3
+ 20a:	2201      	movs	r2, #1
+ 20c:	4053      	eors	r3, r2
+ 20e:	b2da      	uxtb	r2, r3
+ 210:	4b08      	ldr	r3, [pc, #32]	@ (234 <__HEAP_SIZE+0x34>)
+ 212:	701a      	strb	r2, [r3, #0]
+        gpio_write(2,0, !button_pressed); //toggle led at p2.0
+ 214:	4b07      	ldr	r3, [pc, #28]	@ (234 <__HEAP_SIZE+0x34>)
+ 216:	781b      	ldrb	r3, [r3, #0]
+ 218:	b2db      	uxtb	r3, r3
+ 21a:	425a      	negs	r2, r3
+ 21c:	4153      	adcs	r3, r2
+ 21e:	b2db      	uxtb	r3, r3
+ 220:	001a      	movs	r2, r3
+ 222:	2100      	movs	r1, #0
+ 224:	2002      	movs	r0, #2
+ 226:	f000 f941 	bl	4ac <gpio_write>
+    }
+}
+ 22a:	46c0      	nop			@ (mov r8, r8)
+ 22c:	46bd      	mov	sp, r7
+ 22e:	bd80      	pop	{r7, pc}
+ 230:	40040300 	.word	0x40040300
+ 234:	20000000 	.word	0x20000000
+
+00000238 <tcpwm_interrupts_2_IRQHandler>:
+
+void tcpwm_interrupts_2_IRQHandler(void)
+{
+ 238:	b580      	push	{r7, lr}
+ 23a:	af00      	add	r7, sp, #0
+    //check if timer expired
+    if (*((uint32_t *)0x402001B0) & (1 << 0)) //check TC bit in TCPWM2 TCPWM_CNT2_INTR Register
+ 23c:	4b0d      	ldr	r3, [pc, #52]	@ (274 <tcpwm_interrupts_2_IRQHandler+0x3c>)
+ 23e:	681b      	ldr	r3, [r3, #0]
+ 240:	2201      	movs	r2, #1
+ 242:	4013      	ands	r3, r2
+ 244:	d012      	beq.n	26c <tcpwm_interrupts_2_IRQHandler+0x34>
+    {
+        //clear interrupt
+        *((uint32_t *)0x402001B0) = (1 << 0); //clear TC bit in TCPWM2 TCPWM_CNT2_INTR Register
+ 246:	4b0b      	ldr	r3, [pc, #44]	@ (274 <tcpwm_interrupts_2_IRQHandler+0x3c>)
+ 248:	2201      	movs	r2, #1
+ 24a:	601a      	str	r2, [r3, #0]
+        timer_flag ^= 1; //toggle timer flag
+ 24c:	4b0a      	ldr	r3, [pc, #40]	@ (278 <tcpwm_interrupts_2_IRQHandler+0x40>)
+ 24e:	781b      	ldrb	r3, [r3, #0]
+ 250:	b2db      	uxtb	r3, r3
+ 252:	2201      	movs	r2, #1
+ 254:	4053      	eors	r3, r2
+ 256:	b2da      	uxtb	r2, r3
+ 258:	4b07      	ldr	r3, [pc, #28]	@ (278 <tcpwm_interrupts_2_IRQHandler+0x40>)
+ 25a:	701a      	strb	r2, [r3, #0]
+        gpio_write(2,2, timer_flag); //set p2.2 high
+ 25c:	4b06      	ldr	r3, [pc, #24]	@ (278 <tcpwm_interrupts_2_IRQHandler+0x40>)
+ 25e:	781b      	ldrb	r3, [r3, #0]
+ 260:	b2db      	uxtb	r3, r3
+ 262:	001a      	movs	r2, r3
+ 264:	2102      	movs	r1, #2
+ 266:	2002      	movs	r0, #2
+ 268:	f000 f920 	bl	4ac <gpio_write>
+
+    }
+}
+ 26c:	46c0      	nop			@ (mov r8, r8)
+ 26e:	46bd      	mov	sp, r7
+ 270:	bd80      	pop	{r7, pc}
+ 272:	46c0      	nop			@ (mov r8, r8)
+ 274:	402001b0 	.word	0x402001b0
+ 278:	20000001 	.word	0x20000001
+
+0000027c <gpio_hsiom_set>:
+
+/* Each pin uses 4 bits in the HSIOM register */
+#define HSIOM_BITS_PER_PIN     (4u)
+
+void gpio_hsiom_set(uint8_t port, uint8_t pin, uint8_t function)
+{
+ 27c:	b590      	push	{r4, r7, lr}
+ 27e:	b085      	sub	sp, #20
+ 280:	af00      	add	r7, sp, #0
+ 282:	0004      	movs	r4, r0
+ 284:	0008      	movs	r0, r1
+ 286:	0011      	movs	r1, r2
+ 288:	1dfb      	adds	r3, r7, #7
+ 28a:	1c22      	adds	r2, r4, #0
+ 28c:	701a      	strb	r2, [r3, #0]
+ 28e:	1dbb      	adds	r3, r7, #6
+ 290:	1c02      	adds	r2, r0, #0
+ 292:	701a      	strb	r2, [r3, #0]
+ 294:	1d7b      	adds	r3, r7, #5
+ 296:	1c0a      	adds	r2, r1, #0
+ 298:	701a      	strb	r2, [r3, #0]
+    //hsiom configuring for gpio
+    uint32_t hsiom_mask = (uint32_t)(0xFu << (pin * HSIOM_BITS_PER_PIN));
+ 29a:	1dbb      	adds	r3, r7, #6
+ 29c:	781b      	ldrb	r3, [r3, #0]
+ 29e:	009b      	lsls	r3, r3, #2
+ 2a0:	220f      	movs	r2, #15
+ 2a2:	409a      	lsls	r2, r3
+ 2a4:	0013      	movs	r3, r2
+ 2a6:	60fb      	str	r3, [r7, #12]
+    uint32_t hsiom_val = (uint32_t)(function << (pin * HSIOM_BITS_PER_PIN));
+ 2a8:	1d7b      	adds	r3, r7, #5
+ 2aa:	781a      	ldrb	r2, [r3, #0]
+ 2ac:	1dbb      	adds	r3, r7, #6
+ 2ae:	781b      	ldrb	r3, [r3, #0]
+ 2b0:	009b      	lsls	r3, r3, #2
+ 2b2:	409a      	lsls	r2, r3
+ 2b4:	0013      	movs	r3, r2
+ 2b6:	60bb      	str	r3, [r7, #8]
+
+    HSIOM_PORT(port) &= ~hsiom_mask; //clear the hsiom mux for that pin
+ 2b8:	1dfb      	adds	r3, r7, #7
+ 2ba:	781b      	ldrb	r3, [r3, #0]
+ 2bc:	4a11      	ldr	r2, [pc, #68]	@ (304 <gpio_hsiom_set+0x88>)
+ 2be:	4694      	mov	ip, r2
+ 2c0:	4463      	add	r3, ip
+ 2c2:	021b      	lsls	r3, r3, #8
+ 2c4:	681a      	ldr	r2, [r3, #0]
+ 2c6:	68fb      	ldr	r3, [r7, #12]
+ 2c8:	43d9      	mvns	r1, r3
+ 2ca:	1dfb      	adds	r3, r7, #7
+ 2cc:	781b      	ldrb	r3, [r3, #0]
+ 2ce:	480d      	ldr	r0, [pc, #52]	@ (304 <gpio_hsiom_set+0x88>)
+ 2d0:	4684      	mov	ip, r0
+ 2d2:	4463      	add	r3, ip
+ 2d4:	021b      	lsls	r3, r3, #8
+ 2d6:	400a      	ands	r2, r1
+ 2d8:	601a      	str	r2, [r3, #0]
+    HSIOM_PORT(port) |= hsiom_val; //set the hsiom bits for gpio
+ 2da:	1dfb      	adds	r3, r7, #7
+ 2dc:	781b      	ldrb	r3, [r3, #0]
+ 2de:	4a09      	ldr	r2, [pc, #36]	@ (304 <gpio_hsiom_set+0x88>)
+ 2e0:	4694      	mov	ip, r2
+ 2e2:	4463      	add	r3, ip
+ 2e4:	021b      	lsls	r3, r3, #8
+ 2e6:	6819      	ldr	r1, [r3, #0]
+ 2e8:	1dfb      	adds	r3, r7, #7
+ 2ea:	781b      	ldrb	r3, [r3, #0]
+ 2ec:	4a05      	ldr	r2, [pc, #20]	@ (304 <gpio_hsiom_set+0x88>)
+ 2ee:	4694      	mov	ip, r2
+ 2f0:	4463      	add	r3, ip
+ 2f2:	021b      	lsls	r3, r3, #8
+ 2f4:	68ba      	ldr	r2, [r7, #8]
+ 2f6:	430a      	orrs	r2, r1
+ 2f8:	601a      	str	r2, [r3, #0]
+}
+ 2fa:	46c0      	nop			@ (mov r8, r8)
+ 2fc:	46bd      	mov	sp, r7
+ 2fe:	b005      	add	sp, #20
+ 300:	bd90      	pop	{r4, r7, pc}
+ 302:	46c0      	nop			@ (mov r8, r8)
+ 304:	00400200 	.word	0x00400200
+
+00000308 <gpio_init>:
+
+void gpio_init(uint8_t port, uint8_t pin, gpio_dir_t dir){
+ 308:	b590      	push	{r4, r7, lr}
+ 30a:	b085      	sub	sp, #20
+ 30c:	af00      	add	r7, sp, #0
+ 30e:	0004      	movs	r4, r0
+ 310:	0008      	movs	r0, r1
+ 312:	0011      	movs	r1, r2
+ 314:	1dfb      	adds	r3, r7, #7
+ 316:	1c22      	adds	r2, r4, #0
+ 318:	701a      	strb	r2, [r3, #0]
+ 31a:	1dbb      	adds	r3, r7, #6
+ 31c:	1c02      	adds	r2, r0, #0
+ 31e:	701a      	strb	r2, [r3, #0]
+ 320:	1d7b      	adds	r3, r7, #5
+ 322:	1c0a      	adds	r2, r1, #0
+ 324:	701a      	strb	r2, [r3, #0]
+    
+    //configure drive mode in pc
+    uint32_t pc_mask = (uint32_t)(0x7u<< (pin* GPIO_PC_BITS_PER_PIN));
+ 326:	1dbb      	adds	r3, r7, #6
+ 328:	781a      	ldrb	r2, [r3, #0]
+ 32a:	0013      	movs	r3, r2
+ 32c:	005b      	lsls	r3, r3, #1
+ 32e:	189b      	adds	r3, r3, r2
+ 330:	2207      	movs	r2, #7
+ 332:	409a      	lsls	r2, r3
+ 334:	0013      	movs	r3, r2
+ 336:	60fb      	str	r3, [r7, #12]
+    GPIO_PORT(port)->PC &= ~pc_mask;
+ 338:	1dfb      	adds	r3, r7, #7
+ 33a:	781b      	ldrb	r3, [r3, #0]
+ 33c:	4a5a      	ldr	r2, [pc, #360]	@ (4a8 <gpio_init+0x1a0>)
+ 33e:	4694      	mov	ip, r2
+ 340:	4463      	add	r3, ip
+ 342:	021b      	lsls	r3, r3, #8
+ 344:	689a      	ldr	r2, [r3, #8]
+ 346:	68fb      	ldr	r3, [r7, #12]
+ 348:	43d9      	mvns	r1, r3
+ 34a:	1dfb      	adds	r3, r7, #7
+ 34c:	781b      	ldrb	r3, [r3, #0]
+ 34e:	4856      	ldr	r0, [pc, #344]	@ (4a8 <gpio_init+0x1a0>)
+ 350:	4684      	mov	ip, r0
+ 352:	4463      	add	r3, ip
+ 354:	021b      	lsls	r3, r3, #8
+ 356:	400a      	ands	r2, r1
+ 358:	609a      	str	r2, [r3, #8]
+
+    //setting drive mode
+    if(dir==GPIO_OUTPUT_PUSH_PULL){
+ 35a:	1d7b      	adds	r3, r7, #5
+ 35c:	781b      	ldrb	r3, [r3, #0]
+ 35e:	2b06      	cmp	r3, #6
+ 360:	d122      	bne.n	3a8 <gpio_init+0xa0>
+        GPIO_PORT(port)->PC |= (GPIO_DM_STRONG << (pin*GPIO_PC_BITS_PER_PIN));
+ 362:	1dfb      	adds	r3, r7, #7
+ 364:	781b      	ldrb	r3, [r3, #0]
+ 366:	4a50      	ldr	r2, [pc, #320]	@ (4a8 <gpio_init+0x1a0>)
+ 368:	4694      	mov	ip, r2
+ 36a:	4463      	add	r3, ip
+ 36c:	021b      	lsls	r3, r3, #8
+ 36e:	6899      	ldr	r1, [r3, #8]
+ 370:	1dbb      	adds	r3, r7, #6
+ 372:	781a      	ldrb	r2, [r3, #0]
+ 374:	0013      	movs	r3, r2
+ 376:	005b      	lsls	r3, r3, #1
+ 378:	189b      	adds	r3, r3, r2
+ 37a:	2206      	movs	r2, #6
+ 37c:	409a      	lsls	r2, r3
+ 37e:	1dfb      	adds	r3, r7, #7
+ 380:	781b      	ldrb	r3, [r3, #0]
+ 382:	4849      	ldr	r0, [pc, #292]	@ (4a8 <gpio_init+0x1a0>)
+ 384:	4684      	mov	ip, r0
+ 386:	4463      	add	r3, ip
+ 388:	021b      	lsls	r3, r3, #8
+ 38a:	430a      	orrs	r2, r1
+ 38c:	609a      	str	r2, [r3, #8]
+
+        GPIO_PORT(port)->DR_SET = (1u<<pin);
+ 38e:	1dbb      	adds	r3, r7, #6
+ 390:	781a      	ldrb	r2, [r3, #0]
+ 392:	1dfb      	adds	r3, r7, #7
+ 394:	781b      	ldrb	r3, [r3, #0]
+ 396:	4944      	ldr	r1, [pc, #272]	@ (4a8 <gpio_init+0x1a0>)
+ 398:	468c      	mov	ip, r1
+ 39a:	4463      	add	r3, ip
+ 39c:	021b      	lsls	r3, r3, #8
+ 39e:	2101      	movs	r1, #1
+ 3a0:	4091      	lsls	r1, r2
+ 3a2:	000a      	movs	r2, r1
+ 3a4:	641a      	str	r2, [r3, #64]	@ 0x40
+        GPIO_PORT(port)->PC |= (GPIO_DM_RES_DWN << (pin*GPIO_PC_BITS_PER_PIN));
+
+        /* Enable pull-down by writing 0 to DR */
+        GPIO_PORT(port)->DR_CLR = (1u << pin);
+    }
+}
+ 3a6:	e07b      	b.n	4a0 <gpio_init+0x198>
+    else if(dir==GPIO_INPUT){
+ 3a8:	1d7b      	adds	r3, r7, #5
+ 3aa:	781b      	ldrb	r3, [r3, #0]
+ 3ac:	2b01      	cmp	r3, #1
+ 3ae:	d116      	bne.n	3de <gpio_init+0xd6>
+        GPIO_PORT(port)->PC |= (GPIO_DM_HIGHZ << (pin*GPIO_PC_BITS_PER_PIN));
+ 3b0:	1dfb      	adds	r3, r7, #7
+ 3b2:	781b      	ldrb	r3, [r3, #0]
+ 3b4:	4a3c      	ldr	r2, [pc, #240]	@ (4a8 <gpio_init+0x1a0>)
+ 3b6:	4694      	mov	ip, r2
+ 3b8:	4463      	add	r3, ip
+ 3ba:	021b      	lsls	r3, r3, #8
+ 3bc:	6899      	ldr	r1, [r3, #8]
+ 3be:	1dbb      	adds	r3, r7, #6
+ 3c0:	781a      	ldrb	r2, [r3, #0]
+ 3c2:	0013      	movs	r3, r2
+ 3c4:	005b      	lsls	r3, r3, #1
+ 3c6:	189b      	adds	r3, r3, r2
+ 3c8:	2201      	movs	r2, #1
+ 3ca:	409a      	lsls	r2, r3
+ 3cc:	1dfb      	adds	r3, r7, #7
+ 3ce:	781b      	ldrb	r3, [r3, #0]
+ 3d0:	4835      	ldr	r0, [pc, #212]	@ (4a8 <gpio_init+0x1a0>)
+ 3d2:	4684      	mov	ip, r0
+ 3d4:	4463      	add	r3, ip
+ 3d6:	021b      	lsls	r3, r3, #8
+ 3d8:	430a      	orrs	r2, r1
+ 3da:	609a      	str	r2, [r3, #8]
+}
+ 3dc:	e060      	b.n	4a0 <gpio_init+0x198>
+    else if(dir==GPIO_INPUT_ANALOG){
+ 3de:	1d7b      	adds	r3, r7, #5
+ 3e0:	781b      	ldrb	r3, [r3, #0]
+ 3e2:	2b00      	cmp	r3, #0
+ 3e4:	d10f      	bne.n	406 <gpio_init+0xfe>
+        GPIO_PORT(port)->PC |= (GPIO_DM_ALG_HIZ << (pin*GPIO_PC_BITS_PER_PIN));
+ 3e6:	1dfb      	adds	r3, r7, #7
+ 3e8:	781b      	ldrb	r3, [r3, #0]
+ 3ea:	4a2f      	ldr	r2, [pc, #188]	@ (4a8 <gpio_init+0x1a0>)
+ 3ec:	4694      	mov	ip, r2
+ 3ee:	4463      	add	r3, ip
+ 3f0:	021b      	lsls	r3, r3, #8
+ 3f2:	001a      	movs	r2, r3
+ 3f4:	1dfb      	adds	r3, r7, #7
+ 3f6:	781b      	ldrb	r3, [r3, #0]
+ 3f8:	492b      	ldr	r1, [pc, #172]	@ (4a8 <gpio_init+0x1a0>)
+ 3fa:	468c      	mov	ip, r1
+ 3fc:	4463      	add	r3, ip
+ 3fe:	021b      	lsls	r3, r3, #8
+ 400:	6892      	ldr	r2, [r2, #8]
+ 402:	609a      	str	r2, [r3, #8]
+}
+ 404:	e04c      	b.n	4a0 <gpio_init+0x198>
+    else if(dir==GPIO_INPUT_PULLUP){
+ 406:	1d7b      	adds	r3, r7, #5
+ 408:	781b      	ldrb	r3, [r3, #0]
+ 40a:	2b02      	cmp	r3, #2
+ 40c:	d122      	bne.n	454 <gpio_init+0x14c>
+        GPIO_PORT(port)->PC |= (GPIO_DM_RES_UP << (pin*GPIO_PC_BITS_PER_PIN));
+ 40e:	1dfb      	adds	r3, r7, #7
+ 410:	781b      	ldrb	r3, [r3, #0]
+ 412:	4a25      	ldr	r2, [pc, #148]	@ (4a8 <gpio_init+0x1a0>)
+ 414:	4694      	mov	ip, r2
+ 416:	4463      	add	r3, ip
+ 418:	021b      	lsls	r3, r3, #8
+ 41a:	6899      	ldr	r1, [r3, #8]
+ 41c:	1dbb      	adds	r3, r7, #6
+ 41e:	781a      	ldrb	r2, [r3, #0]
+ 420:	0013      	movs	r3, r2
+ 422:	005b      	lsls	r3, r3, #1
+ 424:	189b      	adds	r3, r3, r2
+ 426:	2202      	movs	r2, #2
+ 428:	409a      	lsls	r2, r3
+ 42a:	1dfb      	adds	r3, r7, #7
+ 42c:	781b      	ldrb	r3, [r3, #0]
+ 42e:	481e      	ldr	r0, [pc, #120]	@ (4a8 <gpio_init+0x1a0>)
+ 430:	4684      	mov	ip, r0
+ 432:	4463      	add	r3, ip
+ 434:	021b      	lsls	r3, r3, #8
+ 436:	430a      	orrs	r2, r1
+ 438:	609a      	str	r2, [r3, #8]
+        GPIO_PORT(port)->DR_SET = (1u<<pin);
+ 43a:	1dbb      	adds	r3, r7, #6
+ 43c:	781a      	ldrb	r2, [r3, #0]
+ 43e:	1dfb      	adds	r3, r7, #7
+ 440:	781b      	ldrb	r3, [r3, #0]
+ 442:	4919      	ldr	r1, [pc, #100]	@ (4a8 <gpio_init+0x1a0>)
+ 444:	468c      	mov	ip, r1
+ 446:	4463      	add	r3, ip
+ 448:	021b      	lsls	r3, r3, #8
+ 44a:	2101      	movs	r1, #1
+ 44c:	4091      	lsls	r1, r2
+ 44e:	000a      	movs	r2, r1
+ 450:	641a      	str	r2, [r3, #64]	@ 0x40
+}
+ 452:	e025      	b.n	4a0 <gpio_init+0x198>
+    else if(dir==GPIO_INPUT_PULLDOWN){
+ 454:	1d7b      	adds	r3, r7, #5
+ 456:	781b      	ldrb	r3, [r3, #0]
+ 458:	2b03      	cmp	r3, #3
+ 45a:	d121      	bne.n	4a0 <gpio_init+0x198>
+        GPIO_PORT(port)->PC |= (GPIO_DM_RES_DWN << (pin*GPIO_PC_BITS_PER_PIN));
+ 45c:	1dfb      	adds	r3, r7, #7
+ 45e:	781b      	ldrb	r3, [r3, #0]
+ 460:	4a11      	ldr	r2, [pc, #68]	@ (4a8 <gpio_init+0x1a0>)
+ 462:	4694      	mov	ip, r2
+ 464:	4463      	add	r3, ip
+ 466:	021b      	lsls	r3, r3, #8
+ 468:	6899      	ldr	r1, [r3, #8]
+ 46a:	1dbb      	adds	r3, r7, #6
+ 46c:	781a      	ldrb	r2, [r3, #0]
+ 46e:	0013      	movs	r3, r2
+ 470:	005b      	lsls	r3, r3, #1
+ 472:	189b      	adds	r3, r3, r2
+ 474:	2203      	movs	r2, #3
+ 476:	409a      	lsls	r2, r3
+ 478:	1dfb      	adds	r3, r7, #7
+ 47a:	781b      	ldrb	r3, [r3, #0]
+ 47c:	480a      	ldr	r0, [pc, #40]	@ (4a8 <gpio_init+0x1a0>)
+ 47e:	4684      	mov	ip, r0
+ 480:	4463      	add	r3, ip
+ 482:	021b      	lsls	r3, r3, #8
+ 484:	430a      	orrs	r2, r1
+ 486:	609a      	str	r2, [r3, #8]
+        GPIO_PORT(port)->DR_CLR = (1u << pin);
+ 488:	1dbb      	adds	r3, r7, #6
+ 48a:	781a      	ldrb	r2, [r3, #0]
+ 48c:	1dfb      	adds	r3, r7, #7
+ 48e:	781b      	ldrb	r3, [r3, #0]
+ 490:	4905      	ldr	r1, [pc, #20]	@ (4a8 <gpio_init+0x1a0>)
+ 492:	468c      	mov	ip, r1
+ 494:	4463      	add	r3, ip
+ 496:	021b      	lsls	r3, r3, #8
+ 498:	2101      	movs	r1, #1
+ 49a:	4091      	lsls	r1, r2
+ 49c:	000a      	movs	r2, r1
+ 49e:	645a      	str	r2, [r3, #68]	@ 0x44
+}
+ 4a0:	46c0      	nop			@ (mov r8, r8)
+ 4a2:	46bd      	mov	sp, r7
+ 4a4:	b005      	add	sp, #20
+ 4a6:	bd90      	pop	{r4, r7, pc}
+ 4a8:	00400400 	.word	0x00400400
+
+000004ac <gpio_write>:
+
+void gpio_write(uint8_t port, uint8_t pin, uint8_t value)
+{
+ 4ac:	b590      	push	{r4, r7, lr}
+ 4ae:	b083      	sub	sp, #12
+ 4b0:	af00      	add	r7, sp, #0
+ 4b2:	0004      	movs	r4, r0
+ 4b4:	0008      	movs	r0, r1
+ 4b6:	0011      	movs	r1, r2
+ 4b8:	1dfb      	adds	r3, r7, #7
+ 4ba:	1c22      	adds	r2, r4, #0
+ 4bc:	701a      	strb	r2, [r3, #0]
+ 4be:	1dbb      	adds	r3, r7, #6
+ 4c0:	1c02      	adds	r2, r0, #0
+ 4c2:	701a      	strb	r2, [r3, #0]
+ 4c4:	1d7b      	adds	r3, r7, #5
+ 4c6:	1c0a      	adds	r2, r1, #0
+ 4c8:	701a      	strb	r2, [r3, #0]
+    if (value)
+ 4ca:	1d7b      	adds	r3, r7, #5
+ 4cc:	781b      	ldrb	r3, [r3, #0]
+ 4ce:	2b00      	cmp	r3, #0
+ 4d0:	d00c      	beq.n	4ec <gpio_write+0x40>
+    {
+        GPIO_PORT(port)->DR_SET = (1u << pin);
+ 4d2:	1dbb      	adds	r3, r7, #6
+ 4d4:	781a      	ldrb	r2, [r3, #0]
+ 4d6:	1dfb      	adds	r3, r7, #7
+ 4d8:	781b      	ldrb	r3, [r3, #0]
+ 4da:	490c      	ldr	r1, [pc, #48]	@ (50c <gpio_write+0x60>)
+ 4dc:	468c      	mov	ip, r1
+ 4de:	4463      	add	r3, ip
+ 4e0:	021b      	lsls	r3, r3, #8
+ 4e2:	2101      	movs	r1, #1
+ 4e4:	4091      	lsls	r1, r2
+ 4e6:	000a      	movs	r2, r1
+ 4e8:	641a      	str	r2, [r3, #64]	@ 0x40
+    }
+    else
+    {
+        GPIO_PORT(port)->DR_CLR = (1u << pin);
+    }
+}
+ 4ea:	e00b      	b.n	504 <gpio_write+0x58>
+        GPIO_PORT(port)->DR_CLR = (1u << pin);
+ 4ec:	1dbb      	adds	r3, r7, #6
+ 4ee:	781a      	ldrb	r2, [r3, #0]
+ 4f0:	1dfb      	adds	r3, r7, #7
+ 4f2:	781b      	ldrb	r3, [r3, #0]
+ 4f4:	4905      	ldr	r1, [pc, #20]	@ (50c <gpio_write+0x60>)
+ 4f6:	468c      	mov	ip, r1
+ 4f8:	4463      	add	r3, ip
+ 4fa:	021b      	lsls	r3, r3, #8
+ 4fc:	2101      	movs	r1, #1
+ 4fe:	4091      	lsls	r1, r2
+ 500:	000a      	movs	r2, r1
+ 502:	645a      	str	r2, [r3, #68]	@ 0x44
+}
+ 504:	46c0      	nop			@ (mov r8, r8)
+ 506:	46bd      	mov	sp, r7
+ 508:	b003      	add	sp, #12
+ 50a:	bd90      	pop	{r4, r7, pc}
+ 50c:	00400400 	.word	0x00400400
+
+00000510 <gpio_read>:
+
+uint8_t gpio_read(uint8_t port, uint8_t pin){
+ 510:	b580      	push	{r7, lr}
+ 512:	b082      	sub	sp, #8
+ 514:	af00      	add	r7, sp, #0
+ 516:	0002      	movs	r2, r0
+ 518:	1dfb      	adds	r3, r7, #7
+ 51a:	701a      	strb	r2, [r3, #0]
+ 51c:	1dbb      	adds	r3, r7, #6
+ 51e:	1c0a      	adds	r2, r1, #0
+ 520:	701a      	strb	r2, [r3, #0]
+    return (uint8_t)((GPIO_PORT(port)->PS >> pin) & 0x01u);
+ 522:	1dfb      	adds	r3, r7, #7
+ 524:	781b      	ldrb	r3, [r3, #0]
+ 526:	4a08      	ldr	r2, [pc, #32]	@ (548 <gpio_read+0x38>)
+ 528:	4694      	mov	ip, r2
+ 52a:	4463      	add	r3, ip
+ 52c:	021b      	lsls	r3, r3, #8
+ 52e:	685a      	ldr	r2, [r3, #4]
+ 530:	1dbb      	adds	r3, r7, #6
+ 532:	781b      	ldrb	r3, [r3, #0]
+ 534:	40da      	lsrs	r2, r3
+ 536:	0013      	movs	r3, r2
+ 538:	b2db      	uxtb	r3, r3
+ 53a:	2201      	movs	r2, #1
+ 53c:	4013      	ands	r3, r2
+ 53e:	b2db      	uxtb	r3, r3
+}
+ 540:	0018      	movs	r0, r3
+ 542:	46bd      	mov	sp, r7
+ 544:	b002      	add	sp, #8
+ 546:	bd80      	pop	{r7, pc}
+ 548:	00400400 	.word	0x00400400
+
+0000054c <clock_div16_init>:
+#include "clock.h"
+
+void clock_div16_init(uint8_t divider_num, uint16_t divider_val, uint8_t peripheral)
+{
+ 54c:	b590      	push	{r4, r7, lr}
+ 54e:	b083      	sub	sp, #12
+ 550:	af00      	add	r7, sp, #0
+ 552:	0004      	movs	r4, r0
+ 554:	0008      	movs	r0, r1
+ 556:	0011      	movs	r1, r2
+ 558:	1dfb      	adds	r3, r7, #7
+ 55a:	1c22      	adds	r2, r4, #0
+ 55c:	701a      	strb	r2, [r3, #0]
+ 55e:	1d3b      	adds	r3, r7, #4
+ 560:	1c02      	adds	r2, r0, #0
+ 562:	801a      	strh	r2, [r3, #0]
+ 564:	1dbb      	adds	r3, r7, #6
+ 566:	1c0a      	adds	r2, r1, #0
+ 568:	701a      	strb	r2, [r3, #0]
+    /* Disable the divider before configuration */
+    CLK_PERI_CMD = (1<<30)|(1<<6)|(divider_num<<0);
+ 56a:	1dfb      	adds	r3, r7, #7
+ 56c:	781b      	ldrb	r3, [r3, #0]
+ 56e:	4a12      	ldr	r2, [pc, #72]	@ (5b8 <clock_div16_init+0x6c>)
+ 570:	431a      	orrs	r2, r3
+ 572:	4b12      	ldr	r3, [pc, #72]	@ (5bc <clock_div16_init+0x70>)
+ 574:	601a      	str	r2, [r3, #0]
+
+    /* Set the division value */
+    PERI_DIV_16_CTL(divider_num) = ((uint32_t)divider_val-1ul)<<8;
+ 576:	1d3b      	adds	r3, r7, #4
+ 578:	881b      	ldrh	r3, [r3, #0]
+ 57a:	1e5a      	subs	r2, r3, #1
+ 57c:	1dfb      	adds	r3, r7, #7
+ 57e:	781b      	ldrb	r3, [r3, #0]
+ 580:	490f      	ldr	r1, [pc, #60]	@ (5c0 <clock_div16_init+0x74>)
+ 582:	468c      	mov	ip, r1
+ 584:	4463      	add	r3, ip
+ 586:	009b      	lsls	r3, r3, #2
+ 588:	0212      	lsls	r2, r2, #8
+ 58a:	601a      	str	r2, [r3, #0]
+
+    /* Enable the divider */
+    CLK_PERI_CMD = (1<<31) |(3<<14) |(63<<8) |(1<<6)|(divider_num<<0);
+ 58c:	1dfb      	adds	r3, r7, #7
+ 58e:	781b      	ldrb	r3, [r3, #0]
+ 590:	4a0c      	ldr	r2, [pc, #48]	@ (5c4 <clock_div16_init+0x78>)
+ 592:	431a      	orrs	r2, r3
+ 594:	4b09      	ldr	r3, [pc, #36]	@ (5bc <clock_div16_init+0x70>)
+ 596:	601a      	str	r2, [r3, #0]
+
+    /*route to peripharal*/
+    PERI_PCLK_CTL(peripheral) = (1<<6)|(divider_num<<0);
+ 598:	1dfb      	adds	r3, r7, #7
+ 59a:	781b      	ldrb	r3, [r3, #0]
+ 59c:	2240      	movs	r2, #64	@ 0x40
+ 59e:	4313      	orrs	r3, r2
+ 5a0:	b2da      	uxtb	r2, r3
+ 5a2:	1dbb      	adds	r3, r7, #6
+ 5a4:	781b      	ldrb	r3, [r3, #0]
+ 5a6:	4908      	ldr	r1, [pc, #32]	@ (5c8 <clock_div16_init+0x7c>)
+ 5a8:	468c      	mov	ip, r1
+ 5aa:	4463      	add	r3, ip
+ 5ac:	009b      	lsls	r3, r3, #2
+ 5ae:	601a      	str	r2, [r3, #0]
+
+ 5b0:	46c0      	nop			@ (mov r8, r8)
+ 5b2:	46bd      	mov	sp, r7
+ 5b4:	b003      	add	sp, #12
+ 5b6:	bd90      	pop	{r4, r7, pc}
+ 5b8:	40000040 	.word	0x40000040
+ 5bc:	40010000 	.word	0x40010000
+ 5c0:	100040c0 	.word	0x100040c0
+ 5c4:	8000ff40 	.word	0x8000ff40
+ 5c8:	10004040 	.word	0x10004040
+
+000005cc <timer_init>:
+#include "drivers/timers/timer.h"
+#include "psoc4100s_tcpwm_regs.h"
+#include <stdio.h>
+
+void timer_init(uint8_t cnt, uint32_t period)
+{
+ 5cc:	b580      	push	{r7, lr}
+ 5ce:	b082      	sub	sp, #8
+ 5d0:	af00      	add	r7, sp, #0
+ 5d2:	0002      	movs	r2, r0
+ 5d4:	6039      	str	r1, [r7, #0]
+ 5d6:	1dfb      	adds	r3, r7, #7
+ 5d8:	701a      	strb	r2, [r3, #0]
+    TCPWM_CTRL &= ~(1<<cnt); //disable the timer
+ 5da:	4b2c      	ldr	r3, [pc, #176]	@ (68c <timer_init+0xc0>)
+ 5dc:	681a      	ldr	r2, [r3, #0]
+ 5de:	1dfb      	adds	r3, r7, #7
+ 5e0:	781b      	ldrb	r3, [r3, #0]
+ 5e2:	2101      	movs	r1, #1
+ 5e4:	4099      	lsls	r1, r3
+ 5e6:	000b      	movs	r3, r1
+ 5e8:	43db      	mvns	r3, r3
+ 5ea:	0019      	movs	r1, r3
+ 5ec:	4b27      	ldr	r3, [pc, #156]	@ (68c <timer_init+0xc0>)
+ 5ee:	400a      	ands	r2, r1
+ 5f0:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_COUNTER_OFFSET) = 0; //clear the counter reg
+ 5f2:	1dfb      	adds	r3, r7, #7
+ 5f4:	781b      	ldrb	r3, [r3, #0]
+ 5f6:	019b      	lsls	r3, r3, #6
+ 5f8:	4a25      	ldr	r2, [pc, #148]	@ (690 <timer_init+0xc4>)
+ 5fa:	4694      	mov	ip, r2
+ 5fc:	4463      	add	r3, ip
+ 5fe:	2200      	movs	r2, #0
+ 600:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_TR_CTRL2_OFFSET) = 0; // when OF happens, set line_out to 1
+ 602:	1dfb      	adds	r3, r7, #7
+ 604:	781b      	ldrb	r3, [r3, #0]
+ 606:	019b      	lsls	r3, r3, #6
+ 608:	4a22      	ldr	r2, [pc, #136]	@ (694 <timer_init+0xc8>)
+ 60a:	4694      	mov	ip, r2
+ 60c:	4463      	add	r3, ip
+ 60e:	2200      	movs	r2, #0
+ 610:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_PERIOD_BUFF_OFFSET) = period - 1; //set the period
+ 612:	1dfb      	adds	r3, r7, #7
+ 614:	781b      	ldrb	r3, [r3, #0]
+ 616:	019b      	lsls	r3, r3, #6
+ 618:	4a1f      	ldr	r2, [pc, #124]	@ (698 <timer_init+0xcc>)
+ 61a:	4694      	mov	ip, r2
+ 61c:	4463      	add	r3, ip
+ 61e:	683a      	ldr	r2, [r7, #0]
+ 620:	3a01      	subs	r2, #1
+ 622:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_CNT_CTRL_OFFSET) |= 0<<24; //set mode to timer
+ 624:	1dfb      	adds	r3, r7, #7
+ 626:	781b      	ldrb	r3, [r3, #0]
+ 628:	4a1c      	ldr	r2, [pc, #112]	@ (69c <timer_init+0xd0>)
+ 62a:	4694      	mov	ip, r2
+ 62c:	4463      	add	r3, ip
+ 62e:	019b      	lsls	r3, r3, #6
+ 630:	001a      	movs	r2, r3
+ 632:	1dfb      	adds	r3, r7, #7
+ 634:	781b      	ldrb	r3, [r3, #0]
+ 636:	4919      	ldr	r1, [pc, #100]	@ (69c <timer_init+0xd0>)
+ 638:	468c      	mov	ip, r1
+ 63a:	4463      	add	r3, ip
+ 63c:	019b      	lsls	r3, r3, #6
+ 63e:	6812      	ldr	r2, [r2, #0]
+ 640:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_INTR_MASK_OFFSET) |= 1<<0; //enable terminal count interrupt
+ 642:	1dfb      	adds	r3, r7, #7
+ 644:	781b      	ldrb	r3, [r3, #0]
+ 646:	019b      	lsls	r3, r3, #6
+ 648:	4a15      	ldr	r2, [pc, #84]	@ (6a0 <timer_init+0xd4>)
+ 64a:	4694      	mov	ip, r2
+ 64c:	4463      	add	r3, ip
+ 64e:	681a      	ldr	r2, [r3, #0]
+ 650:	1dfb      	adds	r3, r7, #7
+ 652:	781b      	ldrb	r3, [r3, #0]
+ 654:	019b      	lsls	r3, r3, #6
+ 656:	4912      	ldr	r1, [pc, #72]	@ (6a0 <timer_init+0xd4>)
+ 658:	468c      	mov	ip, r1
+ 65a:	4463      	add	r3, ip
+ 65c:	2101      	movs	r1, #1
+ 65e:	430a      	orrs	r2, r1
+ 660:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_INTR_OFFSET) |= 1<<0; //clear any pending interrupts
+ 662:	1dfb      	adds	r3, r7, #7
+ 664:	781b      	ldrb	r3, [r3, #0]
+ 666:	019b      	lsls	r3, r3, #6
+ 668:	4a0e      	ldr	r2, [pc, #56]	@ (6a4 <timer_init+0xd8>)
+ 66a:	4694      	mov	ip, r2
+ 66c:	4463      	add	r3, ip
+ 66e:	681a      	ldr	r2, [r3, #0]
+ 670:	1dfb      	adds	r3, r7, #7
+ 672:	781b      	ldrb	r3, [r3, #0]
+ 674:	019b      	lsls	r3, r3, #6
+ 676:	490b      	ldr	r1, [pc, #44]	@ (6a4 <timer_init+0xd8>)
+ 678:	468c      	mov	ip, r1
+ 67a:	4463      	add	r3, ip
+ 67c:	2101      	movs	r1, #1
+ 67e:	430a      	orrs	r2, r1
+ 680:	601a      	str	r2, [r3, #0]
+}
+ 682:	46c0      	nop			@ (mov r8, r8)
+ 684:	46bd      	mov	sp, r7
+ 686:	b002      	add	sp, #8
+ 688:	bd80      	pop	{r7, pc}
+ 68a:	46c0      	nop			@ (mov r8, r8)
+ 68c:	40200000 	.word	0x40200000
+ 690:	40200108 	.word	0x40200108
+ 694:	40200128 	.word	0x40200128
+ 698:	40200118 	.word	0x40200118
+ 69c:	01008004 	.word	0x01008004
+ 6a0:	40200138 	.word	0x40200138
+ 6a4:	40200130 	.word	0x40200130
+
+000006a8 <timer_start>:
+
+void timer_start(uint8_t cnt)
+{
+ 6a8:	b580      	push	{r7, lr}
+ 6aa:	b082      	sub	sp, #8
+ 6ac:	af00      	add	r7, sp, #0
+ 6ae:	0002      	movs	r2, r0
+ 6b0:	1dfb      	adds	r3, r7, #7
+ 6b2:	701a      	strb	r2, [r3, #0]
+    TCPWM_CTRL |= (1<<cnt); //enable the timer
+ 6b4:	4b0d      	ldr	r3, [pc, #52]	@ (6ec <timer_start+0x44>)
+ 6b6:	681a      	ldr	r2, [r3, #0]
+ 6b8:	1dfb      	adds	r3, r7, #7
+ 6ba:	781b      	ldrb	r3, [r3, #0]
+ 6bc:	2101      	movs	r1, #1
+ 6be:	4099      	lsls	r1, r3
+ 6c0:	000b      	movs	r3, r1
+ 6c2:	0019      	movs	r1, r3
+ 6c4:	4b09      	ldr	r3, [pc, #36]	@ (6ec <timer_start+0x44>)
+ 6c6:	430a      	orrs	r2, r1
+ 6c8:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CMD |= (1<<(24 + cnt)); //start the timer
+ 6ca:	4b09      	ldr	r3, [pc, #36]	@ (6f0 <timer_start+0x48>)
+ 6cc:	681a      	ldr	r2, [r3, #0]
+ 6ce:	1dfb      	adds	r3, r7, #7
+ 6d0:	781b      	ldrb	r3, [r3, #0]
+ 6d2:	3318      	adds	r3, #24
+ 6d4:	2101      	movs	r1, #1
+ 6d6:	4099      	lsls	r1, r3
+ 6d8:	000b      	movs	r3, r1
+ 6da:	0019      	movs	r1, r3
+ 6dc:	4b04      	ldr	r3, [pc, #16]	@ (6f0 <timer_start+0x48>)
+ 6de:	430a      	orrs	r2, r1
+ 6e0:	601a      	str	r2, [r3, #0]
+}
+ 6e2:	46c0      	nop			@ (mov r8, r8)
+ 6e4:	46bd      	mov	sp, r7
+ 6e6:	b002      	add	sp, #8
+ 6e8:	bd80      	pop	{r7, pc}
+ 6ea:	46c0      	nop			@ (mov r8, r8)
+ 6ec:	40200000 	.word	0x40200000
+ 6f0:	40200008 	.word	0x40200008
+
+000006f4 <timer_expired>:
+
+uint8_t timer_expired(uint8_t cnt)
+{
+ 6f4:	b580      	push	{r7, lr}
+ 6f6:	b082      	sub	sp, #8
+ 6f8:	af00      	add	r7, sp, #0
+ 6fa:	0002      	movs	r2, r0
+ 6fc:	1dfb      	adds	r3, r7, #7
+ 6fe:	701a      	strb	r2, [r3, #0]
+    if (TCPWM_CNT_REG(cnt, TCPWM_INTR_MASKED_OFFSET) & (1<<0)) //if TC is set then return 1
+ 700:	1dfb      	adds	r3, r7, #7
+ 702:	781b      	ldrb	r3, [r3, #0]
+ 704:	019b      	lsls	r3, r3, #6
+ 706:	4a07      	ldr	r2, [pc, #28]	@ (724 <timer_expired+0x30>)
+ 708:	4694      	mov	ip, r2
+ 70a:	4463      	add	r3, ip
+ 70c:	681b      	ldr	r3, [r3, #0]
+ 70e:	2201      	movs	r2, #1
+ 710:	4013      	ands	r3, r2
+ 712:	d001      	beq.n	718 <timer_expired+0x24>
+    {
+        return 1;
+ 714:	2301      	movs	r3, #1
+ 716:	e000      	b.n	71a <timer_expired+0x26>
+    }
+    else
+    {
+        return 0;
+ 718:	2300      	movs	r3, #0
+    }
+}
+ 71a:	0018      	movs	r0, r3
+ 71c:	46bd      	mov	sp, r7
+ 71e:	b002      	add	sp, #8
+ 720:	bd80      	pop	{r7, pc}
+ 722:	46c0      	nop			@ (mov r8, r8)
+ 724:	4020013c 	.word	0x4020013c
+
+00000728 <timer_clear>:
+
+void timer_clear(uint8_t cnt)
+{
+ 728:	b580      	push	{r7, lr}
+ 72a:	b082      	sub	sp, #8
+ 72c:	af00      	add	r7, sp, #0
+ 72e:	0002      	movs	r2, r0
+ 730:	1dfb      	adds	r3, r7, #7
+ 732:	701a      	strb	r2, [r3, #0]
+    TCPWM_CNT_REG(cnt, TCPWM_INTR_OFFSET) |= 1<<0; //clear the TC interrupt
+ 734:	1dfb      	adds	r3, r7, #7
+ 736:	781b      	ldrb	r3, [r3, #0]
+ 738:	019b      	lsls	r3, r3, #6
+ 73a:	4a08      	ldr	r2, [pc, #32]	@ (75c <timer_clear+0x34>)
+ 73c:	4694      	mov	ip, r2
+ 73e:	4463      	add	r3, ip
+ 740:	681a      	ldr	r2, [r3, #0]
+ 742:	1dfb      	adds	r3, r7, #7
+ 744:	781b      	ldrb	r3, [r3, #0]
+ 746:	019b      	lsls	r3, r3, #6
+ 748:	4904      	ldr	r1, [pc, #16]	@ (75c <timer_clear+0x34>)
+ 74a:	468c      	mov	ip, r1
+ 74c:	4463      	add	r3, ip
+ 74e:	2101      	movs	r1, #1
+ 750:	430a      	orrs	r2, r1
+ 752:	601a      	str	r2, [r3, #0]
+}
+ 754:	46c0      	nop			@ (mov r8, r8)
+ 756:	46bd      	mov	sp, r7
+ 758:	b002      	add	sp, #8
+ 75a:	bd80      	pop	{r7, pc}
+ 75c:	40200130 	.word	0x40200130
+
+00000760 <pwm_init>:
+
+void pwm_init(uint8_t cnt, uint32_t period, uint32_t compare)
+{
+ 760:	b580      	push	{r7, lr}
+ 762:	b084      	sub	sp, #16
+ 764:	af00      	add	r7, sp, #0
+ 766:	60b9      	str	r1, [r7, #8]
+ 768:	607a      	str	r2, [r7, #4]
+ 76a:	210f      	movs	r1, #15
+ 76c:	187b      	adds	r3, r7, r1
+ 76e:	1c02      	adds	r2, r0, #0
+ 770:	701a      	strb	r2, [r3, #0]
+    TCPWM_CTRL &= ~(1<<cnt); //disable the timer
+ 772:	4b22      	ldr	r3, [pc, #136]	@ (7fc <pwm_init+0x9c>)
+ 774:	681a      	ldr	r2, [r3, #0]
+ 776:	0008      	movs	r0, r1
+ 778:	187b      	adds	r3, r7, r1
+ 77a:	781b      	ldrb	r3, [r3, #0]
+ 77c:	2101      	movs	r1, #1
+ 77e:	4099      	lsls	r1, r3
+ 780:	000b      	movs	r3, r1
+ 782:	43db      	mvns	r3, r3
+ 784:	0019      	movs	r1, r3
+ 786:	4b1d      	ldr	r3, [pc, #116]	@ (7fc <pwm_init+0x9c>)
+ 788:	400a      	ands	r2, r1
+ 78a:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_COUNTER_OFFSET) = 0; //clear the counter reg
+ 78c:	0001      	movs	r1, r0
+ 78e:	187b      	adds	r3, r7, r1
+ 790:	781b      	ldrb	r3, [r3, #0]
+ 792:	019b      	lsls	r3, r3, #6
+ 794:	4a1a      	ldr	r2, [pc, #104]	@ (800 <pwm_init+0xa0>)
+ 796:	4694      	mov	ip, r2
+ 798:	4463      	add	r3, ip
+ 79a:	2200      	movs	r2, #0
+ 79c:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_TR_CTRL2_OFFSET) = (3<<4) | (0<<2) | (1<<0); //OF: set line_out to 1, CC match: clear line_out to 0
+ 79e:	187b      	adds	r3, r7, r1
+ 7a0:	781b      	ldrb	r3, [r3, #0]
+ 7a2:	019b      	lsls	r3, r3, #6
+ 7a4:	4a17      	ldr	r2, [pc, #92]	@ (804 <pwm_init+0xa4>)
+ 7a6:	4694      	mov	ip, r2
+ 7a8:	4463      	add	r3, ip
+ 7aa:	2231      	movs	r2, #49	@ 0x31
+ 7ac:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_CC_OFFSET) = (compare - 1); //set compare value
+ 7ae:	187b      	adds	r3, r7, r1
+ 7b0:	781b      	ldrb	r3, [r3, #0]
+ 7b2:	019b      	lsls	r3, r3, #6
+ 7b4:	4a14      	ldr	r2, [pc, #80]	@ (808 <pwm_init+0xa8>)
+ 7b6:	4694      	mov	ip, r2
+ 7b8:	4463      	add	r3, ip
+ 7ba:	687a      	ldr	r2, [r7, #4]
+ 7bc:	3a01      	subs	r2, #1
+ 7be:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_PERIOD_OFFSET) = period - 1; //set the period
+ 7c0:	187b      	adds	r3, r7, r1
+ 7c2:	781b      	ldrb	r3, [r3, #0]
+ 7c4:	019b      	lsls	r3, r3, #6
+ 7c6:	4a11      	ldr	r2, [pc, #68]	@ (80c <pwm_init+0xac>)
+ 7c8:	4694      	mov	ip, r2
+ 7ca:	4463      	add	r3, ip
+ 7cc:	68ba      	ldr	r2, [r7, #8]
+ 7ce:	3a01      	subs	r2, #1
+ 7d0:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CNT_REG(cnt, TCPWM_CNT_CTRL_OFFSET) |= (4<<24) | (1<<3); //PWM mode set, continous mode by default bit 18, PWM stop on kill 
+ 7d2:	187b      	adds	r3, r7, r1
+ 7d4:	781b      	ldrb	r3, [r3, #0]
+ 7d6:	4a0e      	ldr	r2, [pc, #56]	@ (810 <pwm_init+0xb0>)
+ 7d8:	4694      	mov	ip, r2
+ 7da:	4463      	add	r3, ip
+ 7dc:	019b      	lsls	r3, r3, #6
+ 7de:	681a      	ldr	r2, [r3, #0]
+ 7e0:	187b      	adds	r3, r7, r1
+ 7e2:	781b      	ldrb	r3, [r3, #0]
+ 7e4:	490a      	ldr	r1, [pc, #40]	@ (810 <pwm_init+0xb0>)
+ 7e6:	468c      	mov	ip, r1
+ 7e8:	4463      	add	r3, ip
+ 7ea:	019b      	lsls	r3, r3, #6
+ 7ec:	4909      	ldr	r1, [pc, #36]	@ (814 <pwm_init+0xb4>)
+ 7ee:	430a      	orrs	r2, r1
+ 7f0:	601a      	str	r2, [r3, #0]
+}
+ 7f2:	46c0      	nop			@ (mov r8, r8)
+ 7f4:	46bd      	mov	sp, r7
+ 7f6:	b004      	add	sp, #16
+ 7f8:	bd80      	pop	{r7, pc}
+ 7fa:	46c0      	nop			@ (mov r8, r8)
+ 7fc:	40200000 	.word	0x40200000
+ 800:	40200108 	.word	0x40200108
+ 804:	40200128 	.word	0x40200128
+ 808:	4020010c 	.word	0x4020010c
+ 80c:	40200114 	.word	0x40200114
+ 810:	01008004 	.word	0x01008004
+ 814:	04000008 	.word	0x04000008
+
+00000818 <pwm_start>:
+
+void pwm_start(uint8_t cnt)
+{
+ 818:	b580      	push	{r7, lr}
+ 81a:	b082      	sub	sp, #8
+ 81c:	af00      	add	r7, sp, #0
+ 81e:	0002      	movs	r2, r0
+ 820:	1dfb      	adds	r3, r7, #7
+ 822:	701a      	strb	r2, [r3, #0]
+    TCPWM_CTRL |= (1<<cnt); //enable the timer
+ 824:	4b0d      	ldr	r3, [pc, #52]	@ (85c <pwm_start+0x44>)
+ 826:	681a      	ldr	r2, [r3, #0]
+ 828:	1dfb      	adds	r3, r7, #7
+ 82a:	781b      	ldrb	r3, [r3, #0]
+ 82c:	2101      	movs	r1, #1
+ 82e:	4099      	lsls	r1, r3
+ 830:	000b      	movs	r3, r1
+ 832:	0019      	movs	r1, r3
+ 834:	4b09      	ldr	r3, [pc, #36]	@ (85c <pwm_start+0x44>)
+ 836:	430a      	orrs	r2, r1
+ 838:	601a      	str	r2, [r3, #0]
+
+    TCPWM_CMD |= (1<<(8 + cnt)); //reload the timer
+ 83a:	4b09      	ldr	r3, [pc, #36]	@ (860 <pwm_start+0x48>)
+ 83c:	681a      	ldr	r2, [r3, #0]
+ 83e:	1dfb      	adds	r3, r7, #7
+ 840:	781b      	ldrb	r3, [r3, #0]
+ 842:	3308      	adds	r3, #8
+ 844:	2101      	movs	r1, #1
+ 846:	4099      	lsls	r1, r3
+ 848:	000b      	movs	r3, r1
+ 84a:	0019      	movs	r1, r3
+ 84c:	4b04      	ldr	r3, [pc, #16]	@ (860 <pwm_start+0x48>)
+ 84e:	430a      	orrs	r2, r1
+ 850:	601a      	str	r2, [r3, #0]
+ 852:	46c0      	nop			@ (mov r8, r8)
+ 854:	46bd      	mov	sp, r7
+ 856:	b002      	add	sp, #8
+ 858:	bd80      	pop	{r7, pc}
+ 85a:	46c0      	nop			@ (mov r8, r8)
+ 85c:	40200000 	.word	0x40200000
+ 860:	40200008 	.word	0x40200008
+
+00000864 <enable_irq>:
+#include "cmsis_gcc.h"
+#include <stdint.h>
+
+void enable_irq(void)
+{
+ 864:	b580      	push	{r7, lr}
+ 866:	af00      	add	r7, sp, #0
+  __asm volatile ("cpsie i" : : : "memory");
+ 868:	b662      	cpsie	i
+}
+ 86a:	46c0      	nop			@ (mov r8, r8)
+ 86c:	46bd      	mov	sp, r7
+ 86e:	bd80      	pop	{r7, pc}
+
+00000870 <disable_irq>:
+
+void disable_irq(void)
+{
+ 870:	b580      	push	{r7, lr}
+ 872:	af00      	add	r7, sp, #0
+  __asm volatile ("cpsid i" : : : "memory");
+ 874:	b672      	cpsid	i
+}
+ 876:	46c0      	nop			@ (mov r8, r8)
+ 878:	46bd      	mov	sp, r7
+ 87a:	bd80      	pop	{r7, pc}
+
+0000087c <NVIC_SetPriority>:
+
+void NVIC_SetPriority(uint32_t IRQn, uint32_t priority)
+{
+ 87c:	b580      	push	{r7, lr}
+ 87e:	b082      	sub	sp, #8
+ 880:	af00      	add	r7, sp, #0
+ 882:	6078      	str	r0, [r7, #4]
+ 884:	6039      	str	r1, [r7, #0]
+  if ((int32_t)(IRQn) >= 0)
+ 886:	687b      	ldr	r3, [r7, #4]
+ 888:	2b00      	cmp	r3, #0
+ 88a:	db1f      	blt.n	8cc <NVIC_SetPriority+0x50>
+  {
+    NVIC->IP[_IP_IDX(IRQn)]  = ((uint32_t)(NVIC->IP[_IP_IDX(IRQn)]  & ~(0xFFUL << _BIT_SHIFT(IRQn))) |
+ 88c:	4a11      	ldr	r2, [pc, #68]	@ (8d4 <NVIC_SetPriority+0x58>)
+ 88e:	687b      	ldr	r3, [r7, #4]
+ 890:	089b      	lsrs	r3, r3, #2
+ 892:	33c0      	adds	r3, #192	@ 0xc0
+ 894:	009b      	lsls	r3, r3, #2
+ 896:	589b      	ldr	r3, [r3, r2]
+ 898:	687a      	ldr	r2, [r7, #4]
+ 89a:	2103      	movs	r1, #3
+ 89c:	400a      	ands	r2, r1
+ 89e:	00d2      	lsls	r2, r2, #3
+ 8a0:	21ff      	movs	r1, #255	@ 0xff
+ 8a2:	4091      	lsls	r1, r2
+ 8a4:	000a      	movs	r2, r1
+ 8a6:	43d2      	mvns	r2, r2
+ 8a8:	401a      	ands	r2, r3
+ 8aa:	0011      	movs	r1, r2
+       (((priority << (8U - 2)) & (uint32_t)0xFFUL) << _BIT_SHIFT(IRQn)));
+ 8ac:	683b      	ldr	r3, [r7, #0]
+ 8ae:	019b      	lsls	r3, r3, #6
+ 8b0:	22ff      	movs	r2, #255	@ 0xff
+ 8b2:	401a      	ands	r2, r3
+ 8b4:	687b      	ldr	r3, [r7, #4]
+ 8b6:	2003      	movs	r0, #3
+ 8b8:	4003      	ands	r3, r0
+ 8ba:	00db      	lsls	r3, r3, #3
+ 8bc:	409a      	lsls	r2, r3
+    NVIC->IP[_IP_IDX(IRQn)]  = ((uint32_t)(NVIC->IP[_IP_IDX(IRQn)]  & ~(0xFFUL << _BIT_SHIFT(IRQn))) |
+ 8be:	4805      	ldr	r0, [pc, #20]	@ (8d4 <NVIC_SetPriority+0x58>)
+ 8c0:	687b      	ldr	r3, [r7, #4]
+ 8c2:	089b      	lsrs	r3, r3, #2
+ 8c4:	430a      	orrs	r2, r1
+ 8c6:	33c0      	adds	r3, #192	@ 0xc0
+ 8c8:	009b      	lsls	r3, r3, #2
+ 8ca:	501a      	str	r2, [r3, r0]
+  }
+
+}
+ 8cc:	46c0      	nop			@ (mov r8, r8)
+ 8ce:	46bd      	mov	sp, r7
+ 8d0:	b002      	add	sp, #8
+ 8d2:	bd80      	pop	{r7, pc}
+ 8d4:	e000e100 	.word	0xe000e100
+
+000008d8 <NVIC_ClearPendingIRQ>:
+
+void NVIC_ClearPendingIRQ(uint32_t IRQn)
+{
+ 8d8:	b580      	push	{r7, lr}
+ 8da:	b082      	sub	sp, #8
+ 8dc:	af00      	add	r7, sp, #0
+ 8de:	6078      	str	r0, [r7, #4]
+  if ((int32_t)(IRQn) >= 0)
+ 8e0:	687b      	ldr	r3, [r7, #4]
+ 8e2:	2b00      	cmp	r3, #0
+ 8e4:	db08      	blt.n	8f8 <NVIC_ClearPendingIRQ+0x20>
+  {
+    NVIC->ICPR = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
+ 8e6:	687b      	ldr	r3, [r7, #4]
+ 8e8:	221f      	movs	r2, #31
+ 8ea:	4013      	ands	r3, r2
+ 8ec:	4904      	ldr	r1, [pc, #16]	@ (900 <NVIC_ClearPendingIRQ+0x28>)
+ 8ee:	2201      	movs	r2, #1
+ 8f0:	409a      	lsls	r2, r3
+ 8f2:	23c0      	movs	r3, #192	@ 0xc0
+ 8f4:	005b      	lsls	r3, r3, #1
+ 8f6:	50ca      	str	r2, [r1, r3]
+  }
+}
+ 8f8:	46c0      	nop			@ (mov r8, r8)
+ 8fa:	46bd      	mov	sp, r7
+ 8fc:	b002      	add	sp, #8
+ 8fe:	bd80      	pop	{r7, pc}
+ 900:	e000e100 	.word	0xe000e100
+
+00000904 <NVIC_EnableIRQ>:
+
+void NVIC_EnableIRQ(uint32_t IRQn)
+{
+ 904:	b580      	push	{r7, lr}
+ 906:	b082      	sub	sp, #8
+ 908:	af00      	add	r7, sp, #0
+ 90a:	6078      	str	r0, [r7, #4]
+  if ((int32_t)(IRQn) >= 0)
+ 90c:	687b      	ldr	r3, [r7, #4]
+ 90e:	2b00      	cmp	r3, #0
+ 910:	db07      	blt.n	922 <NVIC_EnableIRQ+0x1e>
+  {
+    __asm volatile("":::"memory");
+    NVIC->ISER = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
+ 912:	687b      	ldr	r3, [r7, #4]
+ 914:	221f      	movs	r2, #31
+ 916:	401a      	ands	r2, r3
+ 918:	4b04      	ldr	r3, [pc, #16]	@ (92c <NVIC_EnableIRQ+0x28>)
+ 91a:	2101      	movs	r1, #1
+ 91c:	4091      	lsls	r1, r2
+ 91e:	000a      	movs	r2, r1
+ 920:	601a      	str	r2, [r3, #0]
+    __asm volatile("":::"memory");
+  }
+}
+ 922:	46c0      	nop			@ (mov r8, r8)
+ 924:	46bd      	mov	sp, r7
+ 926:	b002      	add	sp, #8
+ 928:	bd80      	pop	{r7, pc}
+ 92a:	46c0      	nop			@ (mov r8, r8)
+ 92c:	e000e100 	.word	0xe000e100
+
+00000930 <NVIC_DisableIRQ>:
+
+void NVIC_DisableIRQ(uint32_t IRQn)
+{
+ 930:	b580      	push	{r7, lr}
+ 932:	b082      	sub	sp, #8
+ 934:	af00      	add	r7, sp, #0
+ 936:	6078      	str	r0, [r7, #4]
+  if ((int32_t)(IRQn) >= 0)
+ 938:	687b      	ldr	r3, [r7, #4]
+ 93a:	2b00      	cmp	r3, #0
+ 93c:	db0c      	blt.n	958 <NVIC_DisableIRQ+0x28>
+  {
+    NVIC->ICER = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
+ 93e:	687b      	ldr	r3, [r7, #4]
+ 940:	221f      	movs	r2, #31
+ 942:	4013      	ands	r3, r2
+ 944:	4906      	ldr	r1, [pc, #24]	@ (960 <NVIC_DisableIRQ+0x30>)
+ 946:	2201      	movs	r2, #1
+ 948:	409a      	lsls	r2, r3
+ 94a:	0013      	movs	r3, r2
+ 94c:	2280      	movs	r2, #128	@ 0x80
+ 94e:	508b      	str	r3, [r1, r2]
+    __asm volatile ("dsb 0xF":::"memory");
+ 950:	f3bf 8f4f 	dsb	sy
+    __asm volatile ("isb 0xF":::"memory");
+ 954:	f3bf 8f6f 	isb	sy
+  }
+ 958:	46c0      	nop			@ (mov r8, r8)
+ 95a:	46bd      	mov	sp, r7
+ 95c:	b002      	add	sp, #8
+ 95e:	bd80      	pop	{r7, pc}
+ 960:	e000e100 	.word	0xe000e100
+
+00000964 <_init>:
+extern uint32_t __bss_start__;
+extern uint32_t __bss_end__;
+
+extern uint32_t __STACK_START;
+extern uint32_t __STACK_END;
+extern void _init(void) {;}
+ 964:	b580      	push	{r7, lr}
+ 966:	af00      	add	r7, sp, #0
+ 968:	46c0      	nop			@ (mov r8, r8)
+ 96a:	46bd      	mov	sp, r7
+ 96c:	bd80      	pop	{r7, pc}
+
+0000096e <Reset_handler>:
+    (uint32_t)can_interrupt_can_IRQHandler,             /*  26 CAN Interrupt */
+    (uint32_t)crypto_interrupt_IRQHandler               /*  27 Crypto Interrupt */
+};
+
+void Reset_handler(void)
+{
+ 96e:	b580      	push	{r7, lr}
+ 970:	b086      	sub	sp, #24
+ 972:	af00      	add	r7, sp, #0
+    //disable watchdog
+    (*(uint32_t *) CYREG_WDT_DISABLE_KEY) = CY_SYS_WDT_KEY;
+ 974:	4b1c      	ldr	r3, [pc, #112]	@ (9e8 <Reset_handler+0x7a>)
+ 976:	4a1d      	ldr	r2, [pc, #116]	@ (9ec <Reset_handler+0x7e>)
+ 978:	601a      	str	r2, [r3, #0]
+
+    //copy .data section to SRAM
+    uint32_t size = &__data_end - &__data_start;
+ 97a:	4a1d      	ldr	r2, [pc, #116]	@ (9f0 <Reset_handler+0x82>)
+ 97c:	4b1d      	ldr	r3, [pc, #116]	@ (9f4 <Reset_handler+0x86>)
+ 97e:	1ad3      	subs	r3, r2, r3
+ 980:	109b      	asrs	r3, r3, #2
+ 982:	607b      	str	r3, [r7, #4]
+    uint32_t *pDst = (uint32_t*)&__data_start;
+ 984:	4b1b      	ldr	r3, [pc, #108]	@ (9f4 <Reset_handler+0x86>)
+ 986:	617b      	str	r3, [r7, #20]
+    uint32_t *pSrc = (uint32_t*)&_la_data;
+ 988:	4b1b      	ldr	r3, [pc, #108]	@ (9f8 <Reset_handler+0x8a>)
+ 98a:	613b      	str	r3, [r7, #16]
+
+    for(uint32_t i = 0; i< size; i++)
+ 98c:	2300      	movs	r3, #0
+ 98e:	60fb      	str	r3, [r7, #12]
+ 990:	e00a      	b.n	9a8 <Reset_handler+0x3a>
+    {
+        *pDst++ = *pSrc++;
+ 992:	693a      	ldr	r2, [r7, #16]
+ 994:	1d13      	adds	r3, r2, #4
+ 996:	613b      	str	r3, [r7, #16]
+ 998:	697b      	ldr	r3, [r7, #20]
+ 99a:	1d19      	adds	r1, r3, #4
+ 99c:	6179      	str	r1, [r7, #20]
+ 99e:	6812      	ldr	r2, [r2, #0]
+ 9a0:	601a      	str	r2, [r3, #0]
+    for(uint32_t i = 0; i< size; i++)
+ 9a2:	68fb      	ldr	r3, [r7, #12]
+ 9a4:	3301      	adds	r3, #1
+ 9a6:	60fb      	str	r3, [r7, #12]
+ 9a8:	68fa      	ldr	r2, [r7, #12]
+ 9aa:	687b      	ldr	r3, [r7, #4]
+ 9ac:	429a      	cmp	r2, r3
+ 9ae:	d3f0      	bcc.n	992 <Reset_handler+0x24>
+    }
+    //int the .bss section to zero in SRAM
+    size = &__bss_end__ - &__bss_start__;
+ 9b0:	4a12      	ldr	r2, [pc, #72]	@ (9fc <Reset_handler+0x8e>)
+ 9b2:	4b13      	ldr	r3, [pc, #76]	@ (a00 <Reset_handler+0x92>)
+ 9b4:	1ad3      	subs	r3, r2, r3
+ 9b6:	109b      	asrs	r3, r3, #2
+ 9b8:	607b      	str	r3, [r7, #4]
+    pDst = (uint32_t*)&__bss_start__;
+ 9ba:	4b11      	ldr	r3, [pc, #68]	@ (a00 <Reset_handler+0x92>)
+ 9bc:	617b      	str	r3, [r7, #20]
+
+    for(uint32_t i = 0; i< size; i++)
+ 9be:	2300      	movs	r3, #0
+ 9c0:	60bb      	str	r3, [r7, #8]
+ 9c2:	e007      	b.n	9d4 <Reset_handler+0x66>
+    {
+        *pDst++ = 0;
+ 9c4:	697b      	ldr	r3, [r7, #20]
+ 9c6:	1d1a      	adds	r2, r3, #4
+ 9c8:	617a      	str	r2, [r7, #20]
+ 9ca:	2200      	movs	r2, #0
+ 9cc:	601a      	str	r2, [r3, #0]
+    for(uint32_t i = 0; i< size; i++)
+ 9ce:	68bb      	ldr	r3, [r7, #8]
+ 9d0:	3301      	adds	r3, #1
+ 9d2:	60bb      	str	r3, [r7, #8]
+ 9d4:	68ba      	ldr	r2, [r7, #8]
+ 9d6:	687b      	ldr	r3, [r7, #4]
+ 9d8:	429a      	cmp	r2, r3
+ 9da:	d3f3      	bcc.n	9c4 <Reset_handler+0x56>
+    }
+
+    // Init C std libs
+    __libc_init_array();
+ 9dc:	f000 f81a 	bl	a14 <__libc_init_array>
+    
+
+    //call main()
+    main();
+ 9e0:	f7ff fb6e 	bl	c0 <main>
+
+    while (1)
+ 9e4:	46c0      	nop			@ (mov r8, r8)
+ 9e6:	e7fd      	b.n	9e4 <Reset_handler+0x76>
+ 9e8:	40030038 	.word	0x40030038
+ 9ec:	aced8865 	.word	0xaced8865
+ 9f0:	20000000 	.word	0x20000000
+ 9f4:	20000000 	.word	0x20000000
+ 9f8:	00000a5c 	.word	0x00000a5c
+ 9fc:	20000004 	.word	0x20000004
+ a00:	20000000 	.word	0x20000000
+
+00000a04 <Default_Handler>:
+
+/*----------------------------------------------------------------------------
+  Default Handler for Exceptions / Interrupts
+ *----------------------------------------------------------------------------*/
+void Default_Handler(void)
+{
+ a04:	b580      	push	{r7, lr}
+ a06:	af00      	add	r7, sp, #0
+    while(1);
+ a08:	46c0      	nop			@ (mov r8, r8)
+ a0a:	e7fd      	b.n	a08 <Default_Handler+0x4>
+
+00000a0c <HRDFLT_Handler>:
+
+/*----------------------------------------------------------------------------
+  Default Handler for Hard Fault
+ *----------------------------------------------------------------------------*/
+void HRDFLT_Handler(void)
+{
+ a0c:	b580      	push	{r7, lr}
+ a0e:	af00      	add	r7, sp, #0
+    while(1);
+ a10:	46c0      	nop			@ (mov r8, r8)
+ a12:	e7fd      	b.n	a10 <HRDFLT_Handler+0x4>
+
+00000a14 <__libc_init_array>:
+ a14:	b570      	push	{r4, r5, r6, lr}
+ a16:	2600      	movs	r6, #0
+ a18:	4c0c      	ldr	r4, [pc, #48]	@ (a4c <__libc_init_array+0x38>)
+ a1a:	4d0d      	ldr	r5, [pc, #52]	@ (a50 <__libc_init_array+0x3c>)
+ a1c:	1b64      	subs	r4, r4, r5
+ a1e:	10a4      	asrs	r4, r4, #2
+ a20:	42a6      	cmp	r6, r4
+ a22:	d109      	bne.n	a38 <__libc_init_array+0x24>
+ a24:	2600      	movs	r6, #0
+ a26:	f7ff ff9d 	bl	964 <_init>
+ a2a:	4c0a      	ldr	r4, [pc, #40]	@ (a54 <__libc_init_array+0x40>)
+ a2c:	4d0a      	ldr	r5, [pc, #40]	@ (a58 <__libc_init_array+0x44>)
+ a2e:	1b64      	subs	r4, r4, r5
+ a30:	10a4      	asrs	r4, r4, #2
+ a32:	42a6      	cmp	r6, r4
+ a34:	d105      	bne.n	a42 <__libc_init_array+0x2e>
+ a36:	bd70      	pop	{r4, r5, r6, pc}
+ a38:	00b3      	lsls	r3, r6, #2
+ a3a:	58eb      	ldr	r3, [r5, r3]
+ a3c:	4798      	blx	r3
+ a3e:	3601      	adds	r6, #1
+ a40:	e7ee      	b.n	a20 <__libc_init_array+0xc>
+ a42:	00b3      	lsls	r3, r6, #2
+ a44:	58eb      	ldr	r3, [r5, r3]
+ a46:	4798      	blx	r3
+ a48:	3601      	adds	r6, #1
+ a4a:	e7f2      	b.n	a32 <__libc_init_array+0x1e>
+	...
