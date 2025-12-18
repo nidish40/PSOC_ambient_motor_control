@@ -3,10 +3,10 @@
 #include "psoc4100s_adc_regs.h"
 
 
-void adc_init(uint8_t port){
+void adc_init(uint8_t pin){
     SAR_CTRL |= ((0x6 << 4) | (0x1 << 7) | (0x7 << 9) | (0x1 << 30)| (0x1 << 31));
 
-    SAR_MUX_SWITCH0 = 0x1<<port;
+    SAR_MUX_SWITCH0 = 0x1<<pin;
 
     SAR_SAMPLE_CTRL |= (0x0 << 1) | (0x0 << 2) | (0x0 << 16);
 

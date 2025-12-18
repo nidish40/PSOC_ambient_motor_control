@@ -1,33 +1,37 @@
 #include "button.h"
 #include "drivers/gpio/gpio.h"
 
-#define DEBOUNCE_DELAY 5000
+/* ================= CONFIG ================= */
 
-static uint8_t btn_port;
-static uint8_t btn_pin;
+#define BUTTON_PORT   3
+#define BUTTON_PIN    7
 
-static void delay(void)
+/* ================= STATE ================= */
+
+static volatile uint8_t button_pressed_flag = 0;
+
+/* ================= API ================= */
+
+void button_init(void)
 {
-    for (volatile uint32_t i = 0; i < DEBOUNCE_DELAY; i++);
+    gpio_init(BUTTON_PORT, BUTTON_PIN, GPIO_INPUT_PULLUP);
+    GPIO_PORT(3)->INTR_CFG |= (0x2 << (BUTTON_PIN * 2)); //set interrupt on falling edge for p3.7
+    GPIO_PORT(3)->INTR |= (1 << BUTTON_PIN); //clear any pending interrupt for p3.7
+    button_pressed_flag = 0;
 }
 
-void button_init(uint8_t port, uint8_t pin)
+void button_isr_notify(void)
 {
-    btn_port = port;
-    btn_pin  = pin;
-
-    gpio_init(btn_port, btn_pin, GPIO_INPUT_PULLUP);
+    /* ISR-safe: just set a flag */
+    button_pressed_flag = 1;
 }
 
-uint8_t button_is_pressed(void)
+uint8_t button_was_pressed(void)
 {
-    uint8_t first = gpio_read(btn_port, btn_pin);
-    delay();
-    uint8_t second = gpio_read(btn_port, btn_pin);
-
-    /* Active LOW button */
-    if ((first == 0) && (second == 0))
+    if (button_pressed_flag)
+    {
+        button_pressed_flag = 0;  // clear after read
         return 1;
-
+    }
     return 0;
 }

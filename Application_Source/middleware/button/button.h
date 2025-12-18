@@ -3,9 +3,13 @@
 
 #include <stdint.h>
 
-void button_init(uint8_t port, uint8_t pin);
+/* Initialize button */
+void button_init(void);
 
-/* Returns 1 if button is pressed (debounced), else 0 */
-uint8_t button_is_pressed(void);
+/* Called from GPIO ISR */
+void button_isr_notify(void);
+
+/* Check if button was pressed */
+uint8_t button_was_pressed(void);
 
 #endif
