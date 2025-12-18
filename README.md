@@ -83,25 +83,28 @@ Implements system-level behavior by connecting sensor input to actuator output.
 ## Build & Run
 
 1. Clone the repository:
-'```bash
-   git clone https://github.com/nidish40/PSOC_ambient_motor_control.git
-````
 
-2. Open the project in an ARM embedded toolchain / IDE
-3. Build and flash the firmware to the PSoC 4100S board
-4. Power the board and observe system behavior
+   ```bash
+   git clone https://github.com/nidish40/PSOC_ambient_motor_control.git
+   ```
+
+2. Open the project in an ARM embedded toolchain or IDE
+   (e.g., ModusToolbox, VS Code with ARM GCC, or a compatible IDE).
+
+3. Build the project and flash the firmware to the **PSoC 4100S** development board.
+
+4. Power the board and observe the system behavior.
 
 ---
 
 ## Future Extensions
 
 * UART-based logging and diagnostics
-* SWD/ITM-based debug output
-* Improved ADC calibration using lookup tables
+* SWD / ITM-based debug output
+* Improved ADC calibration using lookup tables (LUTs)
 * Closed-loop motor speed feedback
-* Configurable control parameters via communication interface
-* RTOS-based task scheduling
+* Configurable control parameters via a communication interface
+* RTOS-based task scheduling and task separation
 * Support for additional sensors or control modes
 
 ---
-
