@@ -7,7 +7,7 @@
 /* Each pin uses 4 bits in the HSIOM register */
 #define HSIOM_BITS_PER_PIN     (4u)
 
-void hsiom_set(uint8_t port, uint8_t pin, uint8_t function)
+void gpio_hsiom_set(uint8_t port, uint8_t pin, uint8_t function)
 {
     //hsiom configuring for gpio
     uint32_t hsiom_mask = (uint32_t)(0xFu << (pin * HSIOM_BITS_PER_PIN));

@@ -30,6 +30,6 @@ typedef enum {
 
  uint8_t gpio_read(uint8_t port, uint8_t pin);
 
- void hsiom_set(uint8_t port, uint8_t pin, uint8_t function);
+ void gpio_hsiom_set(uint8_t port, uint8_t pin, uint8_t function);
 
  #endif

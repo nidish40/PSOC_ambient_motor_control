@@ -19,4 +19,8 @@ uint8_t timer_expired(uint8_t cnt);
 /* Clear terminal count */
 void timer_clear(uint8_t cnt);
 
+void pwm_init(uint8_t cnt, uint32_t period, uint32_t compare);
+
+void pwm_start(uint8_t cnt);
+
 #endif
