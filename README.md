@@ -83,7 +83,7 @@ Implements system-level behavior by connecting sensor input to actuator output.
 ## Build & Run
 
 1. Clone the repository:
-   ```bash
+'```bash
    git clone https://github.com/nidish40/PSOC_ambient_motor_control.git
 ````
 
