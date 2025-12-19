@@ -15,7 +15,6 @@ int main(void)
     gpio_init(2,1, GPIO_INPUT_ANALOG); //ldr input in p2.1
     ldr_init(); //initialize ldr to start reading
 
-
     motor_init(); //initilize motor
     button_init(); //on board button used to toggle direction
 
@@ -26,10 +25,11 @@ int main(void)
 
     enable_irq(); //enable global interrupts
 
+    uart_init(); //initialize uart for debugging
 
     while (1)
     {
-    
+        uart_write_char('a'); 
         static uint32_t ldr_div = 0;
 
         ldr_div++;

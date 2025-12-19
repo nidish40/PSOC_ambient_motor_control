@@ -10,13 +10,16 @@ typedef enum {
     GPIO_INPUT = 1,
     GPIO_INPUT_PULLUP = 2,
     GPIO_INPUT_PULLDOWN = 3,
-    GPIO_OUTPUT_PUSH_PULL = 6
+    GPIO_OPEN_DRAIN_LOW = 4,
+    GPIO_OPEN_DRAIN_HIGH = 5,
+    GPIO_OUTPUT_PUSH_PULL = 6,
+    GPIO_RESISTIVE_UP_DOWN = 7
 } gpio_dir_t;
 
 /*Intitialize a gpio pin
  port : GPIO port number 
  pin: Pin number within the port (0-7)
- dir: output or input*/
+ dir: TYPE OF DRIVE*/
 
  void gpio_init(uint8_t port, uint8_t pin, gpio_dir_t dir);
 
@@ -29,6 +32,8 @@ typedef enum {
  /*reads GPIO input pin returns 0 or 1*/
 
  uint8_t gpio_read(uint8_t port, uint8_t pin);
+
+ /*sets the hsiom mux for gpio pin (ex: gpio, timer, pwm, etc)*/
 
  void gpio_hsiom_set(uint8_t port, uint8_t pin, uint8_t function);
 

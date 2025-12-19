@@ -13,7 +13,7 @@ void gpio_hsiom_set(uint8_t port, uint8_t pin, uint8_t function)
     uint32_t hsiom_mask = (uint32_t)(0xFu << (pin * HSIOM_BITS_PER_PIN));
     uint32_t hsiom_val = (uint32_t)(function << (pin * HSIOM_BITS_PER_PIN));
 
-    HSIOM_PORT(port) &= ~hsiom_mask; //clear the hsiom mux for that pin
+    HSIOM_PORT(port) &= ~hsiom_mask; //clear the hsiom mux for that pin alone
     HSIOM_PORT(port) |= hsiom_val; //set the hsiom bits for gpio
 }
 
@@ -21,7 +21,7 @@ void gpio_init(uint8_t port, uint8_t pin, gpio_dir_t dir){
     
     //configure drive mode in pc
     uint32_t pc_mask = (uint32_t)(0x7u<< (pin* GPIO_PC_BITS_PER_PIN));
-    GPIO_PORT(port)->PC &= ~pc_mask;
+    GPIO_PORT(port)->PC &= ~pc_mask; //clear the Drive mode for the pad
 
     //setting drive mode
     if(dir==GPIO_OUTPUT_PUSH_PULL){

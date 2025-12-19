@@ -7,7 +7,7 @@
 #define LDR_ADC_PIN     1     // which pin is routed in SAR_MUX_SWITCH0
 #define LDR_ADC_CHANNEL  0     // SAR channel number
 
-#define ADC_MAX_VALUE    4095U
+#define ADC_MAX_VALUE    4095U //used for 12 bit resolution
 
 /* ================= API ================= */
 
@@ -17,7 +17,7 @@ void ldr_init(void)
     adc_init(LDR_ADC_PIN);
 
     /* Configure LDR ADC channel */
-    adc_channel_init(LDR_ADC_CHANNEL);
+    adc_channel_init(LDR_ADC_CHANNEL, LDR_ADC_PIN);
 }
 
 uint8_t ldr_get_light_percent(void)
@@ -28,8 +28,7 @@ uint8_t ldr_get_light_percent(void)
     start_adc();
 
     /* Poll for conversion complete */
-    while (!check_adc())
-        ;
+    while (!check_adc());
 
     /* Read ADC result */
     raw = adc_read(LDR_ADC_CHANNEL);

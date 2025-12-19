@@ -7,7 +7,7 @@
 void adc_init(uint8_t port);
 
 /* Configure and enable an ADC channel */
-void adc_channel_init(uint8_t channel);
+void adc_channel_init(uint8_t channel, uint8_t pin);
 
 /* Perform a software-triggered conversion */
 uint16_t adc_read(uint8_t channel);

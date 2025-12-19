@@ -1,6 +1,7 @@
 #include "motor.h"
 #include "drivers/timers/timer.h"
 #include "drivers/gpio/gpio.h"
+#include "drivers/clock/clock.h"
 #include "drivers/timers/psoc4100s_tcpwm_regs.h"
 
 ///User config
@@ -8,8 +9,8 @@
 #define MOTOR_PWM_CNT        7       // TCPWM counter number
 #define MOTOR_PWM_PERIOD     1000
 
-#define MOTOR_DIR_PORT       1
-#define MOTOR_DIR_PIN        6
+#define MOTOR_EN_PORT       1
+#define MOTOR_EN_PIN        6
 
 #define MOTOR_IN1_PORT   5
 #define MOTOR_IN1_PIN    5
@@ -42,8 +43,8 @@ void motor_init(void)
 {
     
     /* Init direction GPIO */
-    gpio_init(MOTOR_DIR_PORT, MOTOR_DIR_PIN, GPIO_OUTPUT_PUSH_PULL);
-    gpio_hsiom_set(MOTOR_DIR_PORT, MOTOR_DIR_PIN, 8);
+    gpio_init(MOTOR_EN_PORT, MOTOR_EN_PIN, GPIO_OUTPUT_PUSH_PULL);
+    gpio_hsiom_set(MOTOR_EN_PORT, MOTOR_EN_PIN, 8); //pin 1.6 is connected to line_out of tcpwm7
 
     gpio_init(MOTOR_IN1_PORT, MOTOR_IN1_PIN, GPIO_OUTPUT_PUSH_PULL);
     gpio_init(MOTOR_IN2_PORT, MOTOR_IN2_PIN, GPIO_OUTPUT_PUSH_PULL);

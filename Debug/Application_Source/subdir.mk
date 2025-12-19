@@ -15,7 +15,7 @@ C_SRCS += \
 ../Application_Source/middleware/button/button.c \
 ../Application_Source/middleware/ldr/ldr.c \
 ../Application_Source/middleware/motor/motor.c \
-../Application_Source/app/app_logic.c
+
 
 # ------------------------------------------------------------------------------
 # Object files
@@ -30,7 +30,7 @@ Application_Source/drivers/uart/uart.o \
 Application_Source/middleware/button/button.o \
 Application_Source/middleware/ldr/ldr.o \
 Application_Source/middleware/motor/motor.o \
-Application_Source/app/app_logic.o
+
 
 # Each subdirectory must supply rules for building sources it contributes
 Application_Source/%.o: ../Application_Source/%.c

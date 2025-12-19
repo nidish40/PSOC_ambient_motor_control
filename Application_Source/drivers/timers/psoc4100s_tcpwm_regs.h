@@ -17,7 +17,7 @@
 #define TCPWM_CMD (*(volatile uint32_t*)(0x40200008UL))
 
 /* Register offsets (from TRM) */
-#define TCPWM_CNT_CTRL_OFFSET        0x00
+#define TCPWM_CNT_CTRL_OFFSET        0x00 //control mode of block
 #define TCPWM_STATUS_OFFSET          0x04
 #define TCPWM_COUNTER_OFFSET         0x08
 #define TCPWM_CC_OFFSET              0x0C
@@ -33,7 +33,7 @@
 #define TCPWM_INTR_MASKED_OFFSET     0x3C
 
 
-/* Register access macros */
+/* Register access macros for TCPWM block */
 #define TCPWM_CNT_REG(cnt, offset) (*(volatile uint32_t *)(TCPWM_CNT_BASE_ADDR(cnt) + (offset)))
 
 /* Bits */

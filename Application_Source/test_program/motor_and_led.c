@@ -64,7 +64,7 @@ int main(void)
 
     /*configuring interrupt*/
     
-    NVIC_SetPriority(3, 1); //set highest priority for button
+    NVIC_SetPriority(3, 1); //set second highest priority for button
     NVIC_EnableIRQ(3); //enable GPIO P3 interrupt in NVIC
     
     
