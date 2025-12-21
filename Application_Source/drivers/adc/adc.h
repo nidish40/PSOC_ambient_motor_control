@@ -2,6 +2,7 @@
 #define ADC_H
 
 #include <stdint.h>
+#include "psoc4100s_adc_regs.h"
 
 /* Initialize ADC core (clock, SAR, reference) */
 void adc_init(uint8_t port);

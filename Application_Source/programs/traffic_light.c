@@ -23,15 +23,16 @@ typedef enum {
 
 volatile light_level_t curr_level = LEVEL_0;
 
+const uint8_t led_count[] = {0,2,4,6,9};
+
 /*gpio build leds*/
 static const struct {
     uint8_t port;
     uint8_t pin;
 } leds[] = { {2,2}, {2,0}, {1,6}, {1,4}, {1,2}, {1,0},
             {5,2}, {5,5}, {5,7}};
-
-static const uint8_t led_count[] = {0,2,4,6,9};
-
+ 
+    
 /*helper functions*/
 void update_state(uint16_t adc);
 void update_leds(light_level_t level);
@@ -39,7 +40,7 @@ void update_leds(light_level_t level);
 
 int main()
 {  
-    /*initalize gpio*/
+    /*----init gpio----*/
     for(uint8_t i =0;i<9;i++)
         gpio_init(leds[i].port, leds[i].pin, GPIO_OUTPUT_PUSH_PULL);
 
@@ -47,7 +48,7 @@ int main()
     /*user led used for interrupt debugging*/
     gpio_init(3,4,6);
 
-    /*ldr init*/
+    /*----ldr init-----*/
     clock_div16_init(0,2,18);
 
     adc_init(1);
@@ -60,14 +61,14 @@ int main()
     *((uint32_t*)0x403A0218) = 1<<0; //set EOS interrupt in SAR_INTR_MASK register
 
    
-    /*TIMER 2 - config*/
-    clock_div16_init(3,24000,8); //TCPWM2 Peripheral clock init
+    /*----TIMER 2 - config---*/
+    clock_div16_init(3,24000,8); //TCPWM2 Peripheral clock init, feeds 1kHz clock to timer 2
 
     timer_init(2, TIMER_PERIOD_MSEC);
 
     timer_start(2);
 
-    /*INTERRUPT*/
+    /*---INTERRUPT----*/
 
     /*Timer 2 interrupt*/
     NVIC_SetPriority(19, 1);
@@ -119,14 +120,13 @@ void pass_0_interrupt_sar_IRQHandler(void){
 }
 
 void update_state(uint16_t adc){
-    
     switch (curr_level){
         case LEVEL_0:
             if(adc > 1000) curr_level = LEVEL_1;
             break;
         case LEVEL_1:
             if(adc > 1600) curr_level = LEVEL_2;
-            else if(adc < 1100) curr_level = LEVEL_0;
+            else if(adc < 900) curr_level = LEVEL_0;
             break;
         case LEVEL_2:
             if(adc > 2100) curr_level = LEVEL_3;

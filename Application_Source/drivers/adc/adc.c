@@ -8,9 +8,9 @@ void adc_init(uint8_t pin){
     SAR_CTRL |= ((0x6 << 4) | (0x1 << 7) | (0x7 << 9) | (0x1 << 30)| (0x1 << 31));
 
     /*close switch between pin and vplus*/
-    SAR_MUX_SWITCH0 = 0x1<<pin;
+    SAR_MUX_SWITCH0 = 0x1<<1;
 
-    /*1->result alignment, 2->signed/unsigned, 16->continous scan*/
+    /*1->result alignment, 2->signed/unsigned 16->continous scan*/
     SAR_SAMPLE_CTRL |= (0x0 << 1) | (0x0 << 2) | (0x0 << 16); 
 
     /*sample time for a singal*/
@@ -19,9 +19,8 @@ void adc_init(uint8_t pin){
 
 void adc_channel_init(uint8_t channel, uint8_t pin){
     /*0->  4->SARMUC pins, 4->PORT address, 9->Resolution of res, 12->which time sample for sampling clock*/
-    /*HERE, 1st bit*/SAR_CHAN_CONFIG(channel) = (pin << 0)  |(0x0 << 4) |(0x0 << 9) | (0x0 << 12);
-    //CHECK HERE
-
+    SAR_CHAN_CONFIG(channel) = (pin << 0)  |(0x0 << 4) |(0x0 << 9) | (0x0 << 12);
+    
     /*enable channel routing*/
     SAR_CHAN_EN |= (1 << channel);
 }
@@ -38,6 +37,7 @@ uint16_t adc_read(uint8_t channel){
 
 uint8_t check_adc(void){
     if((SAR_INTR&0x01)==0x1){ //wait for EOS interrupt
+        SAR_INTR |= 0x01; //clear EOS interrupt
         return 1;
     }else{
         return 0;

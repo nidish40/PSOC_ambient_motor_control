@@ -10,7 +10,7 @@ void timer_init(uint8_t cnt, uint32_t period)
 
     TCPWM_CNT_REG(cnt, TCPWM_TR_CTRL2_OFFSET) = 0; // when OF happens, set line_out to 1
 
-    TCPWM_CNT_REG(cnt, TCPWM_PERIOD_BUFF_OFFSET) = period - 1; //set the period
+    TCPWM_CNT_REG(cnt, TCPWM_PERIOD_OFFSET) = period - 1; //set the period
 
     TCPWM_CNT_REG(cnt, TCPWM_CNT_CTRL_OFFSET) |= 0<<24; //set mode of TCPWM blcok to timer
 
