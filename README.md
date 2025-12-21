@@ -88,10 +88,11 @@ Implements system-level behavior by connecting sensor input to actuator output.
    git clone https://github.com/nidish40/PSOC_ambient_motor_control.git
    ```
 
+
 2. Open the project in an ARM embedded toolchain or IDE
    (e.g., ModusToolbox, VS Code with ARM GCC, or a compatible IDE).
 
-3. Build the project and flash the firmware to the **PSoC 4100S** development board.
+3. Copy the ambient_motor_control code from programs into main file. Build the project and flash the firmware to the **PSoC 4100S** development board.
 
 4. Power the board and observe the system behavior.
 
